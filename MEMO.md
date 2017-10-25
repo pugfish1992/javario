@@ -165,3 +165,35 @@ public class MarioSchema {
   public int killCount;
   public String shout;
 ```
+
+さらに,**final**修飾子をつければ初期値を設定できる.
+
+```
+@ModelSchemaOption(constVarNamePrefix = "CUSTOM_PREFIX_")
+@ModelSchema("Mario")
+public class MarioSchema {
+
+    @FieldOption(fieldName = "custom name of shout", constVarName = "CUSTOM_CONST_NAME_OF_SHOUT")
+    final String shout = "yahoo!.com";
+
+    @FieldOption(fieldName = "custom name of withLuigi")    
+    final boolean withLuigi = false;
+    
+    @FieldOption(constVarName = "CUSTOM_CONST_NAME_OF_KILL_COUNT")
+    final int killCount = 99;
+    
+    final int lifeCount = 1;
+}
+```
+
+```
+  public static final String CUSTOM_PREFIX_LIFE_COUNT = "lifeCount";
+  public static final String CUSTOM_PREFIX_WITH_LUIGI = "custom name of withLuigi";
+  public static final String CUSTOM_PREFIX_CUSTOM_CONST_NAME_OF_KILL_COUNT = "killCount";
+  public static final String CUSTOM_PREFIX_CUSTOM_CONST_NAME_OF_SHOUT = "custom name of shout";
+
+  public int lifeCount = 1;
+  public boolean withLuigi = false;
+  public int killCount = 99;
+  public String shout = "yohoo!.com";
+```
