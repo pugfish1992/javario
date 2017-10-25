@@ -11,12 +11,8 @@ import com.pugfish1992.javario.annotation.ModelSchemaOption;
 @ModelSchema("Mario")
 //@ModelSchemaOption(constVarNamePrefix = "OUSKE")
 public class MarioSchema {
-
-//    @FieldOption(fieldName = "mario_shout", constVarName = "SHOUT")
     String shout;
-
-//    @FieldOption(constVarName = "HAS_HAS_BROTHER")
-    boolean hasBrothers;
-    int kill;
-    int life;
+    boolean withLuigi;
+    int killCount;
+    int lifeCount;
 }

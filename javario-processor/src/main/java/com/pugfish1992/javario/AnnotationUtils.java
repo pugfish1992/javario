@@ -25,6 +25,7 @@ class AnnotationUtils {
 
     static String getSpecifiedFieldNameIfExist(Element element) {
         FieldOption fieldOption = element.getAnnotation(FieldOption.class);
+        // Do not allow an empty name
         if (fieldOption != null && 0 < fieldOption.fieldName().length()) {
             return fieldOption.fieldName();
         }
@@ -33,6 +34,7 @@ class AnnotationUtils {
 
     static String getSpecifiedFieldNameConstVariableNameIfExist(Element element) {
         FieldOption fieldOption = element.getAnnotation(FieldOption.class);
+        // Do not allow an empty name
         if (fieldOption != null && 0 < fieldOption.constVarName().length()) {
             return fieldOption.constVarName();
         }
@@ -41,6 +43,7 @@ class AnnotationUtils {
 
     static String getSpecifiedPrefixOfFieldNameConstVariableNamesIfExist(Element element) {
         ModelSchemaOption schemaOption = element.getAnnotation(ModelSchemaOption.class);
+        // Allow an empty prefix
         if (schemaOption != null) {
             return schemaOption.constVarNamePrefix();
         }

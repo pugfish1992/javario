@@ -33,6 +33,7 @@ import javax.tools.Diagnostic;
 
 @SupportedAnnotationTypes({
         "com.pugfish1992.javario.annotation.ModelSchema",
+        "com.pugfish1992.javario.annotation.ModelSchemaOption",
         "com.pugfish1992.javario.annotation.FieldOption"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class JavarioProcessor extends AbstractProcessor {
@@ -106,7 +107,7 @@ public class JavarioProcessor extends AbstractProcessor {
         for (Element element : typeElement.getEnclosedElements()) {
             if (element.getKind() == ElementKind.FIELD) {
                 VariableElement variableElement = (VariableElement) element;
-                TypeName typeName = MetaDataUtils.getVariableName(variableElement);
+                TypeName typeName = MetaDataUtils.getVariableType(variableElement);
 
                 if (!MetaDataUtils.isTypeSupported(typeName)) {
                     mMessager.printMessage(Diagnostic.Kind.ERROR,
