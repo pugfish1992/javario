@@ -27,7 +27,7 @@ class MetaDataUtils {
     /**
      * In this library, int, long, boolean, String are supported.
      */
-    static boolean isTypeSupported(TypeName typeName) {
+    static boolean isSupportedType(TypeName typeName) {
         return typeName.equals(TypeName.INT) ||
                 typeName.equals(TypeName.LONG) ||
                 typeName.equals(TypeName.BOOLEAN) ||

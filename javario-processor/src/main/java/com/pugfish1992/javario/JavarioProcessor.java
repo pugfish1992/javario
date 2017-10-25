@@ -95,6 +95,7 @@ public class JavarioProcessor extends AbstractProcessor {
         Map<String, String> fieldNamesWithFieldNameConstantVarNames = new HashMap<>();
         Map<String, String> fieldNamesWithFieldVariableNames = new HashMap<>();
         Map<String, TypeName> fieldNamesWithTypes = new HashMap<>();
+        Map<String, Object> fieldNamesWithDefaultValues = new HashMap<>();
 
         // prefix of a name of a constant variable which represent a field name
         String prefix = AnnotationUtils
@@ -109,7 +110,7 @@ public class JavarioProcessor extends AbstractProcessor {
                 VariableElement variableElement = (VariableElement) element;
                 TypeName typeName = MetaDataUtils.getVariableType(variableElement);
 
-                if (!MetaDataUtils.isTypeSupported(typeName)) {
+                if (!MetaDataUtils.isSupportedType(typeName)) {
                     mMessager.printMessage(Diagnostic.Kind.ERROR,
                             typeName.toString() + " type does not supported.");
                 }
@@ -134,6 +135,11 @@ public class JavarioProcessor extends AbstractProcessor {
                 fieldNamesWithTypes.put(fieldName, typeName);
                 fieldNamesWithFieldVariableNames.put(fieldName, fieldVarName);
                 fieldNamesWithFieldNameConstantVarNames.put(fieldName, fieldNameConstVarName);
+
+                // get default value if exists
+                if (variableElement.getConstantValue() != null) {
+                    fieldNamesWithDefaultValues.put(fieldName, variableElement.getConstantValue());
+                }
             }
         }
 
@@ -142,9 +148,10 @@ public class JavarioProcessor extends AbstractProcessor {
             String fieldValName = fieldNamesWithFieldVariableNames.get(fieldName);
             String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
             TypeName fieldType = fieldNamesWithTypes.get(fieldName);
+            Object defValue = fieldNamesWithDefaultValues.get(fieldName);
 
-            modelClass.addField(buildField(fieldValName, fieldType));
-            modelClass.addField(buildFieldNameConstant(fieldName, fieldConstName));
+            modelClass.addField(buildFieldNameConstantVariable(fieldName, fieldConstName));
+            modelClass.addField(buildFieldVariable(fieldValName, fieldType, defValue));
         }
 
         // Methods for CRUD
@@ -166,12 +173,12 @@ public class JavarioProcessor extends AbstractProcessor {
     }
 
     /**
-     * For example, #buildFieldNameConstant("user_name", "FIELD_USER_NAME) will generates:
+     * For example, #buildFieldNameConstantVariable("user_name", "FIELD_USER_NAME") will generates:
      *
      * > public static final String FIELD_USER_NAME = "userName";
      *
      */
-    private FieldSpec buildFieldNameConstant(String fieldName, String constVariableName) {
+    private FieldSpec buildFieldNameConstantVariable(String fieldName, String constVariableName) {
         return FieldSpec.builder(String.class,
                 constVariableName,
                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
@@ -180,13 +187,26 @@ public class JavarioProcessor extends AbstractProcessor {
     }
 
     /**
-     * For example, #buildField("age", TypeName.INT) will generates:
+     * For example, #buildFieldVariable("age", TypeName.INT, 47) will generates:
      *
-     * > public int age;
+     * > public int age = 47;
      *
      */
-    private FieldSpec buildField(String variableName, TypeName type) {
-        return FieldSpec.builder(type, variableName, Modifier.PUBLIC).build();
+    private FieldSpec buildFieldVariable(String variableName, TypeName type, Object defValue) {
+        FieldSpec.Builder builder = FieldSpec.builder(type, variableName, Modifier.PUBLIC);
+         if (defValue == null) {
+             return builder.build();
+         }
+
+         if (defValue instanceof String) {
+             return builder
+                     .initializer("$S", (String) defValue)
+                     .build();
+         } else {
+             return builder
+                     .initializer("$L", defValue)
+                     .build();
+         }
     }
 
     /**

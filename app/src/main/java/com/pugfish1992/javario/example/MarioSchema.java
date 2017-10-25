@@ -10,8 +10,8 @@ import com.pugfish1992.javario.annotation.ModelSchemaOption;
 
 @ModelSchema("Mario")
 public class MarioSchema {
-    String shout;
-    boolean withLuigi;
-    int killCount;
+    final String shout = "yahoo!";
+    final boolean withLuigi = false;
+    final long killCount = 50L;
     int lifeCount;
 }
