@@ -9,7 +9,6 @@ import com.pugfish1992.javario.annotation.ModelSchemaOption;
  */
 
 @ModelSchema("Mario")
-//@ModelSchemaOption(constVarNamePrefix = "OUSKE")
 public class MarioSchema {
     String shout;
     boolean withLuigi;

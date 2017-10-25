@@ -331,16 +331,16 @@ public class JavarioProcessor extends AbstractProcessor {
             TypeName fieldType = fieldNamesWithTypes.get(fieldName);
 
             if (MetaDataUtils.isIntType(fieldType)) {
-                builder.addCode("$L = valueMap.getAsInt($L);\n", fieldValName, fieldConstName);
+                builder.addCode("this.$L = valueMap.getAsInt($L);\n", fieldValName, fieldConstName);
             } else
             if (MetaDataUtils.isLongType(fieldType)) {
-                builder.addCode("$L = valueMap.getAsLong($L);\n", fieldValName, fieldConstName);
+                builder.addCode("this.$L = valueMap.getAsLong($L);\n", fieldValName, fieldConstName);
             } else
             if (MetaDataUtils.isBooleanType(fieldType)) {
-                builder.addCode("$L = valueMap.getAsBoolean($L);\n", fieldValName, fieldConstName);
+                builder.addCode("this.$L = valueMap.getAsBoolean($L);\n", fieldValName, fieldConstName);
             } else
             if (MetaDataUtils.isStringType(fieldType)) {
-                builder.addCode("$L = valueMap.getAsString($L);\n", fieldValName, fieldConstName);
+                builder.addCode("this.$L = valueMap.getAsString($L);\n", fieldValName, fieldConstName);
             } else {
                 mMessager.printMessage(Diagnostic.Kind.ERROR,
                         fieldType.toString() + " type does not supported.");
@@ -395,22 +395,23 @@ public class JavarioProcessor extends AbstractProcessor {
 
         builder.addStatement("$T<$T, $T> map = new $T<>()",
                 Map.class, String.class, FieldType.class, HashMap.class);
+        builder.addStatement("map.put(FIELD_ID, $T.$L)", FieldType.class, FieldType.LONG_TYPE.name());
 
         for (String fieldName : fieldNamesWithFieldNameConstantVarNames.keySet()) {
             String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
             TypeName fieldType = fieldNamesWithTypes.get(fieldName);
 
             if (MetaDataUtils.isIntType(fieldType)) {
-                builder.addStatement("map.put($L, $T.INT_TYPE)", fieldConstName, FieldType.class);
+                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.INT_TYPE.name());
             } else
             if (MetaDataUtils.isLongType(fieldType)) {
-                builder.addStatement("map.put($L, $T.LONG_TYPE)", fieldConstName, FieldType.class);
+                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.LONG_TYPE.name());
             } else
             if (MetaDataUtils.isBooleanType(fieldType)) {
-                builder.addStatement("map.put($L, $T.BOOLEAN_TYPE)", fieldConstName, FieldType.class);
+                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.BOOLEAN_TYPE.name());
             } else
             if (MetaDataUtils.isStringType(fieldType)) {
-                builder.addStatement("map.put($L, $T.STRING_TYPE)", fieldConstName, FieldType.class);
+                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.STRING_TYPE.name());
             } else {
                 mMessager.printMessage(Diagnostic.Kind.ERROR,
                         fieldType.toString() + " type does not supported.");

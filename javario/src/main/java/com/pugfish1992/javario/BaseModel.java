@@ -12,10 +12,15 @@ abstract public class BaseModel {
 
     public static final String FIELD_ID = "id";
 
+    // Anybody can modify this variable except for this class
     private long id;
 
     public BaseModel() {
         this.id = DataSource.INVALID_ID;
+    }
+
+    public long getId() {
+        return id;
     }
 
     /**
