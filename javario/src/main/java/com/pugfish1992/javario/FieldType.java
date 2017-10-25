@@ -5,7 +5,6 @@ package com.pugfish1992.javario;
  */
 
 public enum FieldType {
-    SHORT_TYPE,
     INT_TYPE,
     LONG_TYPE,
     STRING_TYPE,

@@ -16,7 +16,7 @@ public class SampleModel extends BaseModel {
     public int countOfSubscribers;
     public String userName;
 
-    public static SampleModel findByItemId(long id) {
+    public static SampleModel findItemById(long id) {
         return BaseModel.findByItemIdFrom(id, SampleModel.class);
     }
 
@@ -25,7 +25,7 @@ public class SampleModel extends BaseModel {
     }
 
     public static boolean saveItem(SampleModel item) {
-        return BaseModel.saveItemFrom(item, SampleModel.class);
+        return BaseModel.saveItemTo(item, SampleModel.class);
     }
 
     public static boolean deleteItem(SampleModel item) {
@@ -58,10 +58,9 @@ public class SampleModel extends BaseModel {
      * This method will be called in {@link ModelUtils#getFiledNamesAndTypesOf(Class)}
      * using reflection.
      */
-    static Map<String, FieldType> getFiledNamesAndTypes() {
+    static Map<String, FieldType> getFieldNamesAndTypes() {
         Map<String, FieldType> map = new HashMap<>();
         map.put(FIELD_ID, FieldType.LONG_TYPE);
-
         map.put(FIELD_COUNT_OF_SUBSCRIBERS, FieldType.INT_TYPE);
         map.put(FIELD_USER_NAME, FieldType.STRING_TYPE);
         return map;

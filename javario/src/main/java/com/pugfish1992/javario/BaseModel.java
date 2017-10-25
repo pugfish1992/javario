@@ -39,7 +39,7 @@ abstract public class BaseModel {
         return null;
     }
 
-    protected static <T extends BaseModel> boolean saveItemFrom(T item, Class<T> klass) {
+    protected static <T extends BaseModel> boolean saveItemTo(T item, Class<T> klass) {
         return false;
     }
 

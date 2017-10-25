@@ -2,11 +2,11 @@ package com.pugfish1992.javario.example;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
+import com.pugfish1992.javario.Mario;
 import com.pugfish1992.javario.annotation.ModelSchema;
-import com.pugfish1992.plumber.Navigator;
 
-@ModelSchema
 public class MainActivity extends AppCompatActivity {
 
     @Override
