@@ -16,7 +16,7 @@ class MetaDataUtils {
 
     private MetaDataUtils() {}
 
-    static TypeName getFieldType(VariableElement element) {
+    static TypeName getVariableName(VariableElement element) {
         return TypeName.get(element.asType());
     }
 

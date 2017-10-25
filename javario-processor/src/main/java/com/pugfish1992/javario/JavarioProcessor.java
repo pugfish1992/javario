@@ -29,14 +29,16 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 
-@SupportedAnnotationTypes("com.pugfish1992.javario.annotation.ModelSchema")
+@SupportedAnnotationTypes({
+        "com.pugfish1992.javario.annotation.ModelSchema",
+        "com.pugfish1992.javario.annotation.FieldOption"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class JavarioProcessor extends AbstractProcessor {
 
     private static final String GENERATED_CLASS_PACKAGE = BaseModel.class.getPackage().getName();
+    private static final String DEF_PREFIX_OF_NAME_OF_CONST_VAR_FOR_FIELD_NAME = "FIELD_";
 
     private static final ClassName classString = ClassName.get(String.class);
     private static final ClassName classList = ClassName.get(List.class);
@@ -45,14 +47,14 @@ public class JavarioProcessor extends AbstractProcessor {
 
     private Filer mFiler;
     private Messager mMessager;
-    private Elements mElements;
+//    private Elements mElements;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
         super.init(processingEnvironment);
         mFiler = processingEnvironment.getFiler();
         mMessager = processingEnvironment.getMessager();
-        mElements = processingEnvironment.getElementUtils();
+//        mElements = processingEnvironment.getElementUtils();
     }
 
     @Override
@@ -75,6 +77,10 @@ public class JavarioProcessor extends AbstractProcessor {
         return true;
     }
 
+    /**
+     *
+     * @param typeElement One of this element's annotation would be {@link ModelSchema}.
+     */
     private void writeModelClass(TypeElement typeElement) throws IOException {
         ClassName modelClassName = ClassName.get(
                 GENERATED_CLASS_PACKAGE, AnnotationUtils.getModelName(typeElement));
@@ -84,35 +90,56 @@ public class JavarioProcessor extends AbstractProcessor {
                 .superclass(BaseModel.class)
                 .addModifiers(Modifier.PUBLIC);
 
-        final String FIELD_NAME_CONSTANT_PREFIX = "FIELD_";
         // Key is a fieldName
-        Map<String, String> fieldNamesWithFieldNameConstantNames = new HashMap<>();
+        Map<String, String> fieldNamesWithFieldNameConstantVarNames = new HashMap<>();
         Map<String, String> fieldNamesWithFieldVariableNames = new HashMap<>();
         Map<String, TypeName> fieldNamesWithTypes = new HashMap<>();
+
+        // prefix of a name of a constant variable which represent a field name
+        String prefix = AnnotationUtils
+                .getSpecifiedPrefixOfFieldNameConstVariableNamesIfExist(typeElement);
+        if (prefix == null) {
+            prefix = DEF_PREFIX_OF_NAME_OF_CONST_VAR_FOR_FIELD_NAME;
+        }
 
         // Field name constants & fields
         for (Element element : typeElement.getEnclosedElements()) {
             if (element.getKind() == ElementKind.FIELD) {
                 VariableElement variableElement = (VariableElement) element;
-                String fieldName = MetaDataUtils.getFieldName(variableElement);
-                TypeName typeName = MetaDataUtils.getFieldType(variableElement);
+                TypeName typeName = MetaDataUtils.getVariableName(variableElement);
 
                 if (!MetaDataUtils.isTypeSupported(typeName)) {
                     mMessager.printMessage(Diagnostic.Kind.ERROR,
                             typeName.toString() + " type does not supported.");
                 }
 
+                // name of a variable of a field
+                String fieldVarName = MetaDataUtils.getFieldName(variableElement);
+
+                // field name
+                String fieldName = AnnotationUtils.getSpecifiedFieldNameIfExist(variableElement);
+                if (fieldName == null) {
+                    fieldName = fieldVarName;
+                }
+
+                // name of a constant variable which represent a field name
+                String fieldNameConstVarName = AnnotationUtils
+                        .getSpecifiedFieldNameConstVariableNameIfExist(variableElement);
+                if (fieldNameConstVarName == null) {
+                    fieldNameConstVarName = StringUtils.camelToCapitalSnake(fieldName);
+                }
+                fieldNameConstVarName = prefix + fieldNameConstVarName;
+
                 fieldNamesWithTypes.put(fieldName, typeName);
-                fieldNamesWithFieldVariableNames.put(fieldName, fieldName);
-                fieldNamesWithFieldNameConstantNames.put(fieldName,
-                        FIELD_NAME_CONSTANT_PREFIX + StringUtils.camelToCapitalSnake(fieldName));
+                fieldNamesWithFieldVariableNames.put(fieldName, fieldVarName);
+                fieldNamesWithFieldNameConstantVarNames.put(fieldName, fieldNameConstVarName);
             }
         }
 
         // Variables
         for (String fieldName : fieldNamesWithTypes.keySet()) {
             String fieldValName = fieldNamesWithFieldVariableNames.get(fieldName);
-            String fieldConstName = fieldNamesWithFieldNameConstantNames.get(fieldName);
+            String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
             TypeName fieldType = fieldNamesWithTypes.get(fieldName);
 
             modelClass.addField(buildField(fieldValName, fieldType));
@@ -127,18 +154,18 @@ public class JavarioProcessor extends AbstractProcessor {
 
         // Utility methods for DataSource
         modelClass.addMethod(buildToValueMapMethod(
-                fieldNamesWithFieldNameConstantNames, fieldNamesWithFieldVariableNames));
+                fieldNamesWithFieldNameConstantVarNames, fieldNamesWithFieldVariableNames));
         modelClass.addMethod(buildInitWithValueMapMethod(
-                fieldNamesWithFieldNameConstantNames, fieldNamesWithFieldVariableNames, fieldNamesWithTypes));
+                fieldNamesWithFieldNameConstantVarNames, fieldNamesWithFieldVariableNames, fieldNamesWithTypes));
         modelClass.addMethod(buildNewInstanceMethod(modelClassName));
         modelClass.addMethod(buildGetFieldNamesAndTypesMethod(
-                fieldNamesWithFieldNameConstantNames, fieldNamesWithTypes));
+                fieldNamesWithFieldNameConstantVarNames, fieldNamesWithTypes));
 
         JavaFile.builder(GENERATED_CLASS_PACKAGE, modelClass.build()).build().writeTo(mFiler);
     }
 
     /**
-     * For example, #buildFieldNameConstant("userName") will generates:
+     * For example, #buildFieldNameConstant("user_name", "FIELD_USER_NAME) will generates:
      *
      * > public static final String FIELD_USER_NAME = "userName";
      *
@@ -182,7 +209,7 @@ public class JavarioProcessor extends AbstractProcessor {
     /**
      * For example, #buildListUpItemsMethod(ClassName.get(XXX.class)) will generates:
      *
-     * > public static List<\XXX\> listUpItems() {
+     * > public static List<\XXX> listUpItems() {
      * >     return BaseModel.listUpItemsFrom(id, XXX.class);
      * > }
      */
@@ -234,7 +261,7 @@ public class JavarioProcessor extends AbstractProcessor {
     /**
      * For example,
      *
-     * @param fieldNamesWithFieldNameConstantNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
+     * @param fieldNamesWithFieldNameConstantVarNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
      * @param fieldNamesWithFieldVariableNames = {{age, age}, {user_name, userName}}
      *
      * #buildToValueMapMethod() will generates:
@@ -247,7 +274,7 @@ public class JavarioProcessor extends AbstractProcessor {
      * > }
      */
     private MethodSpec buildToValueMapMethod(
-            Map<String, String> fieldNamesWithFieldNameConstantNames,
+            Map<String, String> fieldNamesWithFieldNameConstantVarNames,
             Map<String, String> fieldNamesWithFieldVariableNames) {
 
         MethodSpec.Builder builder = MethodSpec
@@ -257,9 +284,9 @@ public class JavarioProcessor extends AbstractProcessor {
                 .returns(ValueMap.class);
 
         builder.addCode("return super.toValueMap()\n");
-        for (String fieldName : fieldNamesWithFieldNameConstantNames.keySet()) {
+        for (String fieldName : fieldNamesWithFieldNameConstantVarNames.keySet()) {
             builder.addCode(".put($L, $L)\n",
-                    fieldNamesWithFieldNameConstantNames.get(fieldName),
+                    fieldNamesWithFieldNameConstantVarNames.get(fieldName),
                     fieldNamesWithFieldVariableNames.get(fieldName));
         }
         builder.addCode(";\n");
@@ -270,7 +297,7 @@ public class JavarioProcessor extends AbstractProcessor {
     /**
      * For example,
      *
-     * @param fieldNamesWithFieldNameConstantNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
+     * @param fieldNamesWithFieldNameConstantVarNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
      * @param fieldNamesWithFieldVariableNames = {{age, age}, {user_name, userName}}
      * @param fieldNamesWithTypes = {{age, TypeName.INT}, {user_name, TypeName.get(String.class)}}
      *
@@ -284,7 +311,7 @@ public class JavarioProcessor extends AbstractProcessor {
      * > }
      */
     private MethodSpec buildInitWithValueMapMethod(
-            Map<String, String> fieldNamesWithFieldNameConstantNames,
+            Map<String, String> fieldNamesWithFieldNameConstantVarNames,
             Map<String, String> fieldNamesWithFieldVariableNames,
             Map<String, TypeName> fieldNamesWithTypes) {
 
@@ -297,9 +324,9 @@ public class JavarioProcessor extends AbstractProcessor {
                 .addParameter(param);
 
         builder.addCode("super.initWithValueMap($N);\n", param);
-        for (String fieldName : fieldNamesWithFieldNameConstantNames.keySet()) {
+        for (String fieldName : fieldNamesWithFieldNameConstantVarNames.keySet()) {
             String fieldValName = fieldNamesWithFieldVariableNames.get(fieldName);
-            String fieldConstName = fieldNamesWithFieldNameConstantNames.get(fieldName);
+            String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
             TypeName fieldType = fieldNamesWithTypes.get(fieldName);
 
             if (MetaDataUtils.isIntType(fieldType)) {
@@ -341,7 +368,7 @@ public class JavarioProcessor extends AbstractProcessor {
     /**
      * For example,
      *
-     * @param fieldNamesWithFieldNameConstantNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
+     * @param fieldNamesWithFieldNameConstantVarNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
      * @param fieldNamesWithTypes = {{age, TypeName.INT}, {user_name, TypeName.get(String.class)}}
      *
      * #buildGetFieldNamesAndTypesMethod() will generates:
@@ -354,11 +381,11 @@ public class JavarioProcessor extends AbstractProcessor {
      * > }
      */
     private MethodSpec buildGetFieldNamesAndTypesMethod(
-            Map<String, String> fieldNamesWithFieldNameConstantNames,
+            Map<String, String> fieldNamesWithFieldNameConstantVarNames,
             Map<String, TypeName> fieldNamesWithTypes) {
 
-        ParameterizedTypeName returnType = ParameterizedTypeName.get(
-                classMap, classString, classFieldType);
+        ParameterizedTypeName returnType = ParameterizedTypeName
+                .get(classMap, classString, classFieldType);
 
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("getFieldNamesAndTypes")
@@ -368,8 +395,8 @@ public class JavarioProcessor extends AbstractProcessor {
         builder.addStatement("$T<$T, $T> map = new $T<>()",
                 Map.class, String.class, FieldType.class, HashMap.class);
 
-        for (String fieldName : fieldNamesWithFieldNameConstantNames.keySet()) {
-            String fieldConstName = fieldNamesWithFieldNameConstantNames.get(fieldName);
+        for (String fieldName : fieldNamesWithFieldNameConstantVarNames.keySet()) {
+            String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
             TypeName fieldType = fieldNamesWithTypes.get(fieldName);
 
             if (MetaDataUtils.isIntType(fieldType)) {
