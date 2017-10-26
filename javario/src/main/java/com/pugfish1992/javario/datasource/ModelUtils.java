@@ -1,6 +1,7 @@
 package com.pugfish1992.javario.datasource;
 
 import com.pugfish1992.javario.BaseModel;
+import com.pugfish1992.javario.SchemaInfo;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -14,7 +15,8 @@ public class ModelUtils {
     private ModelUtils() {}
 
     private static final String NEW_INSTANCE_METHOD = "newInstance";
-    private static final String GET_FIELD_NAMES_AND_TYPES_METHOD = "getFieldNamesAndTypes";
+    private static final String GET_FIELD_NAMES_WITH_TYPE_METHOD = "getFieldNamesWithType";
+    private static final String GET_SCHEMA_INFO_METHOD = "getSchemaInfo";
 
     public static <T extends BaseModel> T newInstanceOf(Class<T> klass) {
         try {
@@ -27,13 +29,23 @@ public class ModelUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static Map<String, FieldType> getFiledNamesAndTypesOf(Class<? extends BaseModel> klass) {
+    public static Map<String, FieldType> getFiledNamesWithTypeOf(Class<? extends BaseModel> klass) {
         try {
-            Method method = klass.getMethod(GET_FIELD_NAMES_AND_TYPES_METHOD);
+            Method method = klass.getMethod(GET_FIELD_NAMES_WITH_TYPE_METHOD);
             return (Map<String, FieldType>) method.invoke(null);
         } catch (Exception e) {
             throw new IllegalStateException(klass.getName()
-                    + " class does not has " + GET_FIELD_NAMES_AND_TYPES_METHOD + "() method");
+                    + " class does not has " + GET_FIELD_NAMES_WITH_TYPE_METHOD + "() method");
+        }
+    }
+
+    public static SchemaInfo getSchemaInfoOf(Class<? extends BaseModel> klass) {
+        try {
+            Method method = klass.getMethod(GET_SCHEMA_INFO_METHOD);
+            return (SchemaInfo) method.invoke(null);
+        } catch (Exception e) {
+            throw new IllegalStateException(klass.getName()
+                    + " class does not has " + GET_SCHEMA_INFO_METHOD + "() method");
         }
     }
 }

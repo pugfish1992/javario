@@ -47,6 +47,7 @@ public class JavarioProcessor extends AbstractProcessor {
     private static final ClassName classList = ClassName.get(List.class);
     private static final ClassName classMap = ClassName.get(Map.class);
     private static final ClassName classFieldType = ClassName.get(FieldType.class);
+    private static final ClassName classSchemaInfo = ClassName.get(SchemaInfo.class);
 
     private Filer mFiler;
     private Messager mMessager;
@@ -63,6 +64,8 @@ public class JavarioProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
 
+        Map<String, String> mModelNamesWithClassName = new HashMap<>();
+
         for (Element element : roundEnvironment.getElementsAnnotatedWith(ModelSchema.class)) {
 
             if (element.getKind() != ElementKind.CLASS) {
@@ -71,7 +74,8 @@ public class JavarioProcessor extends AbstractProcessor {
             }
 
             try {
-                writeModelClass((TypeElement) element);
+                Map.Entry<String, String> names = writeModelClass((TypeElement) element);
+                mModelNamesWithClassName.put(names.getKey(), names.getValue());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -81,12 +85,20 @@ public class JavarioProcessor extends AbstractProcessor {
     }
 
     /**
-     *
      * @param typeElement One of this element's annotation would be {@link ModelSchema}.
+     * @return A pair of a model name and model class name.
      */
-    private void writeModelClass(TypeElement typeElement) throws IOException {
-        ClassName modelClassName = ClassName.get(
-                GENERATED_CLASS_PACKAGE, AnnotationUtils.getModelName(typeElement));
+    private Map.Entry<String, String> writeModelClass(TypeElement typeElement) throws IOException {
+        final Map.Entry<String, String> modelNameAndClassName = AnnotationUtils.getModelNameAndClassName(typeElement);
+        if (modelNameAndClassName.getKey() == null) {
+            throw new IllegalStateException("Specify a model name");
+        }
+        // The name of a model class is the same as the model name if it is not specified
+        if (modelNameAndClassName.getValue() == null) {
+            modelNameAndClassName.setValue(modelNameAndClassName.getKey());
+        }
+
+        ClassName modelClassName = ClassName.get(GENERATED_CLASS_PACKAGE, modelNameAndClassName.getValue());
 
         TypeSpec.Builder modelClass = TypeSpec
                 .classBuilder(modelClassName.simpleName())
@@ -94,10 +106,10 @@ public class JavarioProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC);
 
         // Key is a fieldName
-        Map<String, String> fieldNamesWithFieldNameConstantVarNames = new HashMap<>();
-        Map<String, String> fieldNamesWithFieldVariableNames = new HashMap<>();
-        Map<String, TypeName> fieldNamesWithTypes = new HashMap<>();
-        Map<String, Object> fieldNamesWithDefaultValues = new HashMap<>();
+        Map<String, String> fieldNamesWithFieldNameConstantVarName = new HashMap<>();
+        Map<String, String> fieldNamesWithFieldVariableName = new HashMap<>();
+        Map<String, TypeName> fieldNamesWithType = new HashMap<>();
+        Map<String, Object> fieldNamesWithDefaultValue = new HashMap<>();
 
         // prefix of a name of a constant variable which represent a field name
         String prefix = AnnotationUtils
@@ -134,27 +146,30 @@ public class JavarioProcessor extends AbstractProcessor {
                 }
                 fieldNameConstVarName = prefix + fieldNameConstVarName;
 
-                fieldNamesWithTypes.put(fieldName, typeName);
-                fieldNamesWithFieldVariableNames.put(fieldName, fieldVarName);
-                fieldNamesWithFieldNameConstantVarNames.put(fieldName, fieldNameConstVarName);
+                fieldNamesWithType.put(fieldName, typeName);
+                fieldNamesWithFieldVariableName.put(fieldName, fieldVarName);
+                fieldNamesWithFieldNameConstantVarName.put(fieldName, fieldNameConstVarName);
 
                 // get default value if exists
                 if (variableElement.getConstantValue() != null) {
-                    fieldNamesWithDefaultValues.put(fieldName, variableElement.getConstantValue());
+                    fieldNamesWithDefaultValue.put(fieldName, variableElement.getConstantValue());
                 }
             }
         }
 
         // Variables
-        for (String fieldName : fieldNamesWithTypes.keySet()) {
-            String fieldValName = fieldNamesWithFieldVariableNames.get(fieldName);
-            String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
-            TypeName fieldType = fieldNamesWithTypes.get(fieldName);
-            Object defValue = fieldNamesWithDefaultValues.get(fieldName);
+        for (String fieldName : fieldNamesWithType.keySet()) {
+            String fieldValName = fieldNamesWithFieldVariableName.get(fieldName);
+            String fieldConstName = fieldNamesWithFieldNameConstantVarName.get(fieldName);
+            TypeName fieldType = fieldNamesWithType.get(fieldName);
+            Object defValue = fieldNamesWithDefaultValue.get(fieldName);
 
             modelClass.addField(buildFieldNameConstantVariable(fieldName, fieldConstName));
             modelClass.addField(buildFieldVariable(fieldValName, fieldType, defValue));
         }
+
+        // Method to get the model name
+        modelClass.addMethod(buildModelNameMethod(modelNameAndClassName.getKey()));
 
         // Methods for CRUD
         modelClass.addMethod(buildFindItemByIdMethod(modelClassName));
@@ -164,14 +179,15 @@ public class JavarioProcessor extends AbstractProcessor {
 
         // Utility methods for DataSource
         modelClass.addMethod(buildToValueMapMethod(
-                fieldNamesWithFieldNameConstantVarNames, fieldNamesWithFieldVariableNames));
+                fieldNamesWithFieldNameConstantVarName, fieldNamesWithFieldVariableName));
         modelClass.addMethod(buildInitWithValueMapMethod(
-                fieldNamesWithFieldNameConstantVarNames, fieldNamesWithFieldVariableNames, fieldNamesWithTypes));
+                fieldNamesWithFieldNameConstantVarName, fieldNamesWithFieldVariableName, fieldNamesWithType));
         modelClass.addMethod(buildNewInstanceMethod(modelClassName));
-        modelClass.addMethod(buildGetFieldNamesAndTypesMethod(
-                fieldNamesWithFieldNameConstantVarNames, fieldNamesWithTypes));
+        modelClass.addMethod(buildGetSchemaInfoMethod(
+                modelClassName, fieldNamesWithFieldNameConstantVarName, fieldNamesWithType));
 
         JavaFile.builder(GENERATED_CLASS_PACKAGE, modelClass.build()).build().writeTo(mFiler);
+        return modelNameAndClassName;
     }
 
     /**
@@ -209,6 +225,23 @@ public class JavarioProcessor extends AbstractProcessor {
                      .initializer("$L", defValue)
                      .build();
          }
+    }
+
+    /**
+     * For example, #buildModelNameMethod("Mario") will generates:
+     *
+     * > public static String modelName() {
+     * > return "Mario";
+     * > }
+     *
+     */
+    private MethodSpec buildModelNameMethod(String className) {
+        return MethodSpec
+                .methodBuilder("modelName")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(classString)
+                .addStatement("return $S", className)
+                .build();
     }
 
     /**
@@ -284,8 +317,8 @@ public class JavarioProcessor extends AbstractProcessor {
     /**
      * For example,
      *
-     * @param fieldNamesWithFieldNameConstantVarNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
-     * @param fieldNamesWithFieldVariableNames = {{age, age}, {user_name, userName}}
+     * @param fieldNamesWithFieldNameConstantVarName = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
+     * @param fieldNamesWithFieldVariableName = {{age, age}, {user_name, userName}}
      *
      * #buildToValueMapMethod() will generates:
      *
@@ -297,8 +330,8 @@ public class JavarioProcessor extends AbstractProcessor {
      * > }
      */
     private MethodSpec buildToValueMapMethod(
-            Map<String, String> fieldNamesWithFieldNameConstantVarNames,
-            Map<String, String> fieldNamesWithFieldVariableNames) {
+            Map<String, String> fieldNamesWithFieldNameConstantVarName,
+            Map<String, String> fieldNamesWithFieldVariableName) {
 
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("toValueMap")
@@ -307,10 +340,10 @@ public class JavarioProcessor extends AbstractProcessor {
                 .returns(ValueMap.class);
 
         builder.addCode("return super.toValueMap()\n");
-        for (String fieldName : fieldNamesWithFieldNameConstantVarNames.keySet()) {
+        for (String fieldName : fieldNamesWithFieldNameConstantVarName.keySet()) {
             builder.addCode(".put($L, $L)\n",
-                    fieldNamesWithFieldNameConstantVarNames.get(fieldName),
-                    fieldNamesWithFieldVariableNames.get(fieldName));
+                    fieldNamesWithFieldNameConstantVarName.get(fieldName),
+                    fieldNamesWithFieldVariableName.get(fieldName));
         }
         builder.addCode(";\n");
 
@@ -320,9 +353,9 @@ public class JavarioProcessor extends AbstractProcessor {
     /**
      * For example,
      *
-     * @param fieldNamesWithFieldNameConstantVarNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
-     * @param fieldNamesWithFieldVariableNames = {{age, age}, {user_name, userName}}
-     * @param fieldNamesWithTypes = {{age, TypeName.INT}, {user_name, TypeName.get(String.class)}}
+     * @param fieldNamesWithFieldNameConstantVarName = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
+     * @param fieldNamesWithFieldVariableName = {{age, age}, {user_name, userName}}
+     * @param fieldNamesWithType = {{age, TypeName.INT}, {user_name, TypeName.get(String.class)}}
      *
      * #buildInitWithValueMapMethod() will generates:
      *
@@ -334,9 +367,9 @@ public class JavarioProcessor extends AbstractProcessor {
      * > }
      */
     private MethodSpec buildInitWithValueMapMethod(
-            Map<String, String> fieldNamesWithFieldNameConstantVarNames,
-            Map<String, String> fieldNamesWithFieldVariableNames,
-            Map<String, TypeName> fieldNamesWithTypes) {
+            Map<String, String> fieldNamesWithFieldNameConstantVarName,
+            Map<String, String> fieldNamesWithFieldVariableName,
+            Map<String, TypeName> fieldNamesWithType) {
 
         ParameterSpec param = ParameterSpec.builder(ValueMap.class, "valueMap").build();
 
@@ -347,10 +380,10 @@ public class JavarioProcessor extends AbstractProcessor {
                 .addParameter(param);
 
         builder.addCode("super.initWithValueMap($N);\n", param);
-        for (String fieldName : fieldNamesWithFieldNameConstantVarNames.keySet()) {
-            String fieldValName = fieldNamesWithFieldVariableNames.get(fieldName);
-            String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
-            TypeName fieldType = fieldNamesWithTypes.get(fieldName);
+        for (String fieldName : fieldNamesWithFieldNameConstantVarName.keySet()) {
+            String fieldValName = fieldNamesWithFieldVariableName.get(fieldName);
+            String fieldConstName = fieldNamesWithFieldNameConstantVarName.get(fieldName);
+            TypeName fieldType = fieldNamesWithType.get(fieldName);
 
             if (MetaDataUtils.isIntType(fieldType)) {
                 builder.addCode("this.$L = valueMap.getAsInt($L);\n", fieldValName, fieldConstName);
@@ -391,56 +424,61 @@ public class JavarioProcessor extends AbstractProcessor {
     /**
      * For example,
      *
-     * @param fieldNamesWithFieldNameConstantVarNames = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
-     * @param fieldNamesWithTypes = {{age, TypeName.INT}, {user_name, TypeName.get(String.class)}}
+     * @param modelClass = ClassName.get(XXX.class)
+     * @param fieldNamesWithFieldNameConstantVarName = {{age, FIELD_AGE}, {user_name, FIELD_USER_NAME}}
+     * @param fieldNamesWithType = {{age, TypeName.INT}, {user_name, TypeName.get(String.class)}}
      *
-     * #buildGetFieldNamesAndTypesMethod() will generates:
+     * #buildGetFieldNamesWithTypeMethod() will generates:
      *
-     * > static Map<\String, FieldType> getFieldNamesAndTypes() {
-     * >     Map<\String, FieldType> map = new HashMap<>();
-     * >     map.put(FIELD_AGE, FieldType.INT_TYPE);
-     * >     map.put(FIELD_USER_NAME, FieldType.STRING_TYPE);
-     * >     return map;
+     * > public static SchemaInfo getSchemaInfo() {
+     * >     SchemaInfo info = new SchemaInfo();
+     * >     info.setClassName(XXX.modelName());
+     * >     info.setModelName(XXX.class.getSimpleName());
+     * >     info.addFieldNameAndType(FIELD_AGE, FieldType.INT_TYPE);
+     * >     info.addFieldNameAndType(FIELD_USER_NAME, FieldType.STRING_TYPE);
+     * >     return info;
      * > }
      */
-    private MethodSpec buildGetFieldNamesAndTypesMethod(
-            Map<String, String> fieldNamesWithFieldNameConstantVarNames,
-            Map<String, TypeName> fieldNamesWithTypes) {
-
-        ParameterizedTypeName returnType = ParameterizedTypeName
-                .get(classMap, classString, classFieldType);
+    private MethodSpec buildGetSchemaInfoMethod(
+            ClassName modelClass,
+            Map<String, String> fieldNamesWithFieldNameConstantVarName,
+            Map<String, TypeName> fieldNamesWithType) {
 
         MethodSpec.Builder builder = MethodSpec
-                .methodBuilder("getFieldNamesAndTypes")
-                .addModifiers(Modifier.STATIC)
-                .returns(returnType);
+                .methodBuilder("getSchemaInfo")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(classSchemaInfo);
 
-        builder.addStatement("$T<$T, $T> map = new $T<>()",
-                Map.class, String.class, FieldType.class, HashMap.class);
-        builder.addStatement("map.put(FIELD_ID, $T.$L)", FieldType.class, FieldType.LONG_TYPE.name());
-
-        for (String fieldName : fieldNamesWithFieldNameConstantVarNames.keySet()) {
-            String fieldConstName = fieldNamesWithFieldNameConstantVarNames.get(fieldName);
-            TypeName fieldType = fieldNamesWithTypes.get(fieldName);
+        builder.addStatement("$T info = new $T()", classSchemaInfo, classSchemaInfo);
+        // This statement depends on #modelName() method which will be generated by the processor
+        builder.addStatement("info.setModelName($L.modelName())", modelClass.simpleName());
+        builder.addStatement("info.setClassName($L.class.getSimpleName())", modelClass.simpleName());
+        builder.addStatement("info.addFieldNameAndType(FIELD_ID, $T.$L)", FieldType.class, FieldType.LONG_TYPE.name());
+        for (String fieldName : fieldNamesWithFieldNameConstantVarName.keySet()) {
+            String fieldConstName = fieldNamesWithFieldNameConstantVarName.get(fieldName);
+            TypeName fieldType = fieldNamesWithType.get(fieldName);
 
             if (MetaDataUtils.isIntType(fieldType)) {
-                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.INT_TYPE.name());
+                builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
+                        fieldConstName, FieldType.class, FieldType.INT_TYPE.name());
             } else
             if (MetaDataUtils.isLongType(fieldType)) {
-                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.LONG_TYPE.name());
+                builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
+                        fieldConstName, FieldType.class, FieldType.LONG_TYPE.name());
             } else
             if (MetaDataUtils.isBooleanType(fieldType)) {
-                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.BOOLEAN_TYPE.name());
+                builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
+                        fieldConstName, FieldType.class, FieldType.BOOLEAN_TYPE.name());
             } else
             if (MetaDataUtils.isStringType(fieldType)) {
-                builder.addStatement("map.put($L, $T.$L)", fieldConstName, FieldType.class, FieldType.STRING_TYPE.name());
+                builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
+                        fieldConstName, FieldType.class, FieldType.STRING_TYPE.name());
             } else {
                 mMessager.printMessage(Diagnostic.Kind.ERROR,
                         fieldType.toString() + " type does not supported.");
             }
         }
-
-        builder.addStatement("return map");
+        builder.addStatement("return info");
 
         return builder.build();
     }

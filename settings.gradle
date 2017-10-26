@@ -1,1 +1,1 @@
-include ':app', ':javario', ':javario-processor'
+include ':app', ':javario', ':javario-processor', ':javario-sqlite'

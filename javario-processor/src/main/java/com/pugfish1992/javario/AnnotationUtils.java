@@ -4,6 +4,9 @@ import com.pugfish1992.javario.annotation.FieldOption;
 import com.pugfish1992.javario.annotation.ModelSchema;
 import com.pugfish1992.javario.annotation.ModelSchemaOption;
 
+import java.util.AbstractMap;
+import java.util.Map;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
@@ -15,12 +18,23 @@ class AnnotationUtils {
 
     private AnnotationUtils() {}
 
-    static String getModelName(Element element) {
+    /**
+     *
+     * @return The key is a model name, and the value is a model class name.
+     */
+    static Map.Entry<String, String> getModelNameAndClassName(Element element) {
         ModelSchema modelSchema = element.getAnnotation(ModelSchema.class);
         if (modelSchema != null) {
-            return modelSchema.value();
+            String modelName = modelSchema.value();
+            String className = modelSchema.className();
+            if (className.length() == 0) {
+                className = null;
+            }
+
+            return new AbstractMap.SimpleEntry<String, String>(modelName, className);
         }
-        return null;
+
+        return new AbstractMap.SimpleEntry<String, String>(null, null);
     }
 
     static String getSpecifiedFieldNameIfExist(Element element) {

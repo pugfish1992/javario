@@ -10,7 +10,7 @@ import com.pugfish1992.javario.annotation.ModelSchemaOption;
  * Created by daichi on 10/25/17.
  */
 
-@ModelSchema("Mario")
+@ModelSchema(value = "Mario", className = "MarioModel")
 public class MarioSchema {
     final String shout = "yahoo!";
     final boolean withLuigi = false;

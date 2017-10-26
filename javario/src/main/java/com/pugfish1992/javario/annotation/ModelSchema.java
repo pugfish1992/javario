@@ -10,4 +10,6 @@ import java.lang.annotation.Target;
 public @interface ModelSchema {
     // Model name
     String value();
+    // name of a model class which will be generated (optional)
+    String className() default "";
 }
