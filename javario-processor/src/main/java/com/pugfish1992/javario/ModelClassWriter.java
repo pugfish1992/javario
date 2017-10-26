@@ -32,13 +32,8 @@ import javax.tools.Diagnostic;
 
 class ModelClassWriter {
 
-    private static final String GENERATED_CLASS_PACKAGE = BaseModel.class.getPackage().getName();
-    private static final String DEF_PREFIX_OF_NAME_OF_CONST_VAR_FOR_FIELD_NAME = "FIELD_";
-
     private static final ClassName classString = ClassName.get(String.class);
     private static final ClassName classList = ClassName.get(List.class);
-    private static final ClassName classMap = ClassName.get(Map.class);
-    private static final ClassName classFieldType = ClassName.get(FieldType.class);
     private static final ClassName classSchemaInfo = ClassName.get(SchemaInfo.class);
 
     private Messager mMessager;
@@ -63,7 +58,7 @@ class ModelClassWriter {
             modelNameAndClassName.setValue(modelNameAndClassName.getKey());
         }
 
-        ClassName modelClassName = ClassName.get(GENERATED_CLASS_PACKAGE, modelNameAndClassName.getValue());
+        ClassName modelClassName = ClassName.get(ModelClassSpec.GENERATED_CLASS_PACKAGE, modelNameAndClassName.getValue());
 
         TypeSpec.Builder modelClass = TypeSpec
                 .classBuilder(modelClassName.simpleName())
@@ -80,7 +75,7 @@ class ModelClassWriter {
         String prefix = AnnotationUtils
                 .getSpecifiedPrefixOfFieldNameConstVariableNamesIfExist(typeElement);
         if (prefix == null) {
-            prefix = DEF_PREFIX_OF_NAME_OF_CONST_VAR_FOR_FIELD_NAME;
+            prefix = ModelClassSpec.DEF_PREFIX_OF_NAME_OF_CONST_VAR_FOR_FIELD_NAME;
         }
 
         // Field name constants & fields
@@ -151,7 +146,7 @@ class ModelClassWriter {
         modelClass.addMethod(buildGetSchemaInfoMethod(
                 modelClassName, fieldNamesWithFieldNameConstantVarName, fieldNamesWithType));
 
-        JavaFile.builder(GENERATED_CLASS_PACKAGE, modelClass.build()).build().writeTo(mFiler);
+        JavaFile.builder(ModelClassSpec.GENERATED_CLASS_PACKAGE, modelClass.build()).build().writeTo(mFiler);
         return modelNameAndClassName;
     }
 
@@ -202,7 +197,7 @@ class ModelClassWriter {
      */
     private MethodSpec buildModelNameMethod(String className) {
         return MethodSpec
-                .methodBuilder("modelName")
+                .methodBuilder(ModelClassSpec.METHOD_RETURN_MODEL_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(classString)
                 .addStatement("return $S", className)
@@ -219,7 +214,7 @@ class ModelClassWriter {
     private MethodSpec buildFindItemByIdMethod(ClassName modelClass) {
         ParameterSpec param = ParameterSpec.builder(TypeName.LONG, "id").build();
         return MethodSpec
-                .methodBuilder("findItemById")
+                .methodBuilder(ModelClassSpec.METHOD_FIND_ITEM)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(modelClass)
@@ -236,7 +231,7 @@ class ModelClassWriter {
      */
     private MethodSpec buildListItemsMethod(ClassName modelClass) {
         return MethodSpec
-                .methodBuilder("listItems")
+                .methodBuilder(ModelClassSpec.METHOD_LIST_ITEMS)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(classList, modelClass))
                 .addStatement("return $T.listItemsFrom($L.class)", BaseModel.class, modelClass.simpleName())
@@ -253,7 +248,7 @@ class ModelClassWriter {
     private MethodSpec buildSaveItemMethod(ClassName modelClass) {
         ParameterSpec param = ParameterSpec.builder(modelClass, "item").build();
         return MethodSpec
-                .methodBuilder("saveItem")
+                .methodBuilder(ModelClassSpec.METHOD_SAVE_ITEM)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
@@ -271,7 +266,7 @@ class ModelClassWriter {
     private MethodSpec buildDeleteItemMethod(ClassName modelClass) {
         ParameterSpec param = ParameterSpec.builder(modelClass, "item").build();
         return MethodSpec
-                .methodBuilder("deleteItem")
+                .methodBuilder(ModelClassSpec.METHOD_DELETE_ITEM)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
@@ -299,7 +294,7 @@ class ModelClassWriter {
             Map<String, String> fieldNamesWithFieldVariableName) {
 
         MethodSpec.Builder builder = MethodSpec
-                .methodBuilder("toValueMap")
+                .methodBuilder(ModelClassSpec.METHOD_CREATE_VALUE_MAP)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addAnnotation(Override.class)
                 .returns(ValueMap.class);
@@ -339,7 +334,7 @@ class ModelClassWriter {
         ParameterSpec param = ParameterSpec.builder(ValueMap.class, "valueMap").build();
 
         MethodSpec.Builder builder = MethodSpec
-                .methodBuilder("initWithValueMap")
+                .methodBuilder(ModelClassSpec.METHOD_INIT_WITH_VALUE_MAP)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addAnnotation(Override.class)
                 .addParameter(param);
@@ -379,7 +374,7 @@ class ModelClassWriter {
      */
     private MethodSpec buildNewInstanceMethod(ClassName modelClass) {
         return MethodSpec
-                .methodBuilder("newInstance")
+                .methodBuilder(ModelClassSpec.METHOD_CREATE_NEW_INSTANCE)
                 .addModifiers(Modifier.STATIC)
                 .returns(modelClass)
                 .addStatement("return new $L()", modelClass.simpleName())
@@ -410,7 +405,7 @@ class ModelClassWriter {
             Map<String, TypeName> fieldNamesWithType) {
 
         MethodSpec.Builder builder = MethodSpec
-                .methodBuilder("getSchemaInfo")
+                .methodBuilder(ModelClassSpec.METHOD_RETURN_SCHEMA_INFO)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(classSchemaInfo);
 

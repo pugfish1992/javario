@@ -8,7 +8,7 @@ import java.util.List;
  * Created by daichi on 10/26/17.
  */
 
-class ModelCache {
+final class ModelCache {
 
     /*
 

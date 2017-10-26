@@ -10,7 +10,7 @@ import java.util.Set;
  * Created by daichi on 10/26/17.
  */
 
-public class SchemaInfo {
+public final class SchemaInfo {
 
     private String mModelName;
     private String mClassName;

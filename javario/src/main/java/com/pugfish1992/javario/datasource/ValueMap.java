@@ -7,7 +7,7 @@ import java.util.Map;
  * Created by daichi on 10/25/17.
  */
 
-public class ValueMap {
+public final class ValueMap {
 
     // Key is a field name, value is ∂ata
     private Map<String, Object> mFieldNamesWithData;

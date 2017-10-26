@@ -8,7 +8,7 @@ import java.util.List;
  * TODO; SUPPORT REMOTE DATA SOURCE.
  */
 
-class Repository {
+final class Repository {
     
     private static Repository INSTANCE = null;
     private final DataSource<BaseModel> mLocalDataSource;
