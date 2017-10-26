@@ -1,6 +1,7 @@
-package com.pugfish1992.javario;
+package com.pugfish1992.javario.datasource;
 
-import java.lang.reflect.InvocationTargetException;
+import com.pugfish1992.javario.BaseModel;
+
 import java.lang.reflect.Method;
 import java.util.Map;
 

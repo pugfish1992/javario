@@ -1,4 +1,4 @@
-package com.pugfish1992.javario;
+package com.pugfish1992.javario.datasource;
 
 /**
  * Created by daichi on 10/25/17.

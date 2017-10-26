@@ -1,6 +1,8 @@
 package com.pugfish1992.javario;
 
 import com.pugfish1992.javario.annotation.ModelSchema;
+import com.pugfish1992.javario.datasource.FieldType;
+import com.pugfish1992.javario.datasource.ValueMap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -156,7 +158,7 @@ public class JavarioProcessor extends AbstractProcessor {
 
         // Methods for CRUD
         modelClass.addMethod(buildFindItemByIdMethod(modelClassName));
-        modelClass.addMethod(buildListUpItemsMethod(modelClassName));
+        modelClass.addMethod(buildListItemsMethod(modelClassName));
         modelClass.addMethod(buildSaveItemMethod(modelClassName));
         modelClass.addMethod(buildDeleteItemMethod(modelClassName));
 
@@ -228,18 +230,18 @@ public class JavarioProcessor extends AbstractProcessor {
     }
 
     /**
-     * For example, #buildListUpItemsMethod(ClassName.get(XXX.class)) will generates:
+     * For example, #buildListItemsMethod(ClassName.get(XXX.class)) will generates:
      *
-     * > public static List<\XXX> listUpItems() {
-     * >     return BaseModel.listUpItemsFrom(id, XXX.class);
+     * > public static List<\XXX> listItems() {
+     * >     return BaseModel.listItemsFrom(id, XXX.class);
      * > }
      */
-    private MethodSpec buildListUpItemsMethod(ClassName modelClass) {
+    private MethodSpec buildListItemsMethod(ClassName modelClass) {
         return MethodSpec
-                .methodBuilder("listUpItems")
+                .methodBuilder("listItems")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(classList, modelClass))
-                .addStatement("return $T.listUpItemsFrom($L.class)", BaseModel.class, modelClass.simpleName())
+                .addStatement("return $T.listItemsFrom($L.class)", BaseModel.class, modelClass.simpleName())
                 .build();
     }
 
@@ -257,7 +259,7 @@ public class JavarioProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
-                .addStatement("return $T.saveItemTo(item, $L.class)", BaseModel.class, modelClass.simpleName())
+                .addStatement("return $T.saveItemTo(item)", BaseModel.class)
                 .build();
     }
 
@@ -275,7 +277,7 @@ public class JavarioProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
-                .addStatement("return $T.deleteItemFrom(item, $L.class)", BaseModel.class, modelClass.simpleName())
+                .addStatement("return $T.deleteItemFrom(item)", BaseModel.class)
                 .build();
     }
 

@@ -1,4 +1,4 @@
-package com.pugfish1992.javario;
+package com.pugfish1992.javario.datasource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,7 +7,7 @@ import java.util.Map;
  * Created by daichi on 10/25/17.
  */
 
-public final class ValueMap {
+public class ValueMap {
 
     // Key is a field name, value is ∂ata
     private Map<String, Object> mFieldNamesWithData;
