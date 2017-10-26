@@ -16,7 +16,7 @@ public final class SchemaInfo {
     private String mClassName;
     private Map<String, FieldType> mFieldNamesWithType;
 
-    public SchemaInfo() {
+    SchemaInfo() {
         mFieldNamesWithType = new HashMap<>();
     }
 
@@ -36,15 +36,18 @@ public final class SchemaInfo {
         return mFieldNamesWithType.keySet();
     }
 
-    public void setModelName(String modelName) {
+    /* Intentional package-private */
+    void setModelName(String modelName) {
         mModelName = modelName;
     }
 
-    public void setClassName(String className) {
+    /* Intentional package-private */
+    void setClassName(String className) {
         mClassName = className;
     }
 
-    public void addFieldNameAndType(String fieldName, FieldType type) {
+    /* Intentional package-private */
+    void addFieldNameAndType(String fieldName, FieldType type) {
         mFieldNamesWithType.put(fieldName, type);
     }
 }

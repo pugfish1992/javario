@@ -10,10 +10,10 @@ import com.pugfish1992.javario.annotation.ModelSchemaOption;
  * Created by daichi on 10/25/17.
  */
 
-@ModelSchema(value = "Mario", className = "MarioModel")
+@ModelSchema(value = "Mario")
 public class MarioSchema {
-    final String shout = "yahoo!";
-    final boolean withLuigi = false;
-    final long killCount = 50L;
+    String shout;
+    boolean withLuigi;
+    long killCount;
     int lifeCount;
 }

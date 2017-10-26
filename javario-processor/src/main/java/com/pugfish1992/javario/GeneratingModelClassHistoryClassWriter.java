@@ -44,6 +44,7 @@ class GeneratingModelClassHistoryClassWriter {
 
         MethodSpec.Builder method = MethodSpec
                 .methodBuilder(GeneratingModelClassHistoryClassSpec.METHOD_GET_LIST_OF_SCHEMA_INFO)
+                .addModifiers(Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(classList, classSchemaInfo));
 
         method.addStatement("$T<$T> list = new $T<>()", classList, classSchemaInfo, classArrayList);

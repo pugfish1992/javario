@@ -1,6 +1,7 @@
 package com.pugfish1992.javario_sqlite;
 
 import com.pugfish1992.javario.BaseModel;
+import com.pugfish1992.javario.SchemaInfo;
 import com.pugfish1992.javario.datasource.DataSource;
 
 import java.util.List;
@@ -10,6 +11,10 @@ import java.util.List;
  */
 
 public class JavarioSqliteDataSource implements DataSource<BaseModel> {
+
+    @Override
+    public void onInitialize(List<SchemaInfo> schemaInfoList) {
+    }
 
     @Override
     public BaseModel findItemByIdFrom(long id, Class<? extends BaseModel> klass) {
