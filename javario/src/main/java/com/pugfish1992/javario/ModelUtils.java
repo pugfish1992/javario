@@ -1,5 +1,7 @@
 package com.pugfish1992.javario;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -10,11 +12,27 @@ public class ModelUtils {
 
     private ModelUtils() {}
 
+    private static final String NEW_INSTANCE_METHOD = "newInstance";
+    private static final String GET_FIELD_NAMES_AND_TYPES_METHOD = "getFieldNamesAndTypes";
+
     public static <T extends BaseModel> T newInstanceOf(Class<T> klass) {
-        return null;
+        try {
+            Method method = klass.getMethod(NEW_INSTANCE_METHOD);
+            return klass.cast(method.invoke(null));
+        } catch (Exception e) {
+            throw new IllegalStateException(klass.getName()
+                    + " class does not has " + NEW_INSTANCE_METHOD + "() method");
+        }
     }
 
-    public static <T extends BaseModel> Map<String, FieldType> getFiledNamesAndTypesOf(Class<T> klass) {
-        return null;
+    @SuppressWarnings("unchecked")
+    public static Map<String, FieldType> getFiledNamesAndTypesOf(Class<? extends BaseModel> klass) {
+        try {
+            Method method = klass.getMethod(GET_FIELD_NAMES_AND_TYPES_METHOD);
+            return (Map<String, FieldType>) method.invoke(null);
+        } catch (Exception e) {
+            throw new IllegalStateException(klass.getName()
+                    + " class does not has " + GET_FIELD_NAMES_AND_TYPES_METHOD + "() method");
+        }
     }
 }

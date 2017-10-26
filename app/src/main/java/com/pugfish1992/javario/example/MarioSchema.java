@@ -1,5 +1,7 @@
 package com.pugfish1992.javario.example;
 
+import android.view.View;
+
 import com.pugfish1992.javario.annotation.FieldOption;
 import com.pugfish1992.javario.annotation.ModelSchema;
 import com.pugfish1992.javario.annotation.ModelSchemaOption;
