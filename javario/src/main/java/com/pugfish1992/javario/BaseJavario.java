@@ -2,9 +2,9 @@ package com.pugfish1992.javario;
 
 import com.pugfish1992.javario.datasource.DataSource;
 
-import static com.pugfish1992.javario.GeneratingModelClassHistoryClassSpec.CLASS_NAME;
-import static com.pugfish1992.javario.GeneratingModelClassHistoryClassSpec.GENERATED_CLASS_PACKAGE;
-import static com.pugfish1992.javario.GeneratingModelClassHistoryClassSpec.METHOD_GET_LIST_OF_SCHEMA_INFO;
+import static com.pugfish1992.javario.ModelGenerationHistoryClassSpec.CLASS_NAME;
+import static com.pugfish1992.javario.ModelGenerationHistoryClassSpec.GENERATED_CLASS_PACKAGE;
+import static com.pugfish1992.javario.ModelGenerationHistoryClassSpec.METHOD_GET_LIST_OF_SCHEMA_INFO;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
  * Created by daichi on 10/26/17.
  */
 
-public final class Javario {
+public final class BaseJavario {
 
     @SuppressWarnings("unchecked")
     public static void initialize(DataSource<BaseModel> localStorage) {
@@ -21,7 +21,7 @@ public final class Javario {
         try {
             historyClass = Class.forName(GENERATED_CLASS_PACKAGE + "." + CLASS_NAME);
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException(CLASS_NAME + " class does not exist");
+            throw new IllegalStateException(CLASS_NAME + " class is not generated");
         }
 
         List<SchemaInfo> schemaInfoList;

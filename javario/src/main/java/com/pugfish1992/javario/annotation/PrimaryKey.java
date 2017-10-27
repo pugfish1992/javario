@@ -6,11 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by daichi on 10/26/17.
+ * Created by daichi on 10/28/17.
  */
 
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.TYPE)
-public @interface ModelSchemaOption {
-    String constStringNamePrefix();
+@Target(ElementType.FIELD)
+public @interface PrimaryKey {
 }

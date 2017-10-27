@@ -5,8 +5,8 @@ package com.pugfish1992.javario.datasource;
  */
 
 public enum FieldType {
-    INT_TYPE,
-    LONG_TYPE,
-    STRING_TYPE,
-    BOOLEAN_TYPE
+    INT,
+    LONG,
+    STRING,
+    BOOLEAN
 }

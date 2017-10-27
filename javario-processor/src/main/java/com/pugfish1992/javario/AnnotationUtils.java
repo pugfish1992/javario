@@ -8,7 +8,6 @@ import java.util.AbstractMap;
 import java.util.Map;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 
 /**
  * Created by daichi on 10/25/17.
@@ -49,8 +48,8 @@ class AnnotationUtils {
     static String getSpecifiedFieldNameConstVariableNameIfExist(Element element) {
         FieldOption fieldOption = element.getAnnotation(FieldOption.class);
         // Do not allow an empty name
-        if (fieldOption != null && 0 < fieldOption.constVarName().length()) {
-            return fieldOption.constVarName();
+        if (fieldOption != null && 0 < fieldOption.constStringName().length()) {
+            return fieldOption.constStringName();
         }
         return null;
     }
@@ -59,7 +58,7 @@ class AnnotationUtils {
         ModelSchemaOption schemaOption = element.getAnnotation(ModelSchemaOption.class);
         // Allow an empty prefix
         if (schemaOption != null) {
-            return schemaOption.constVarNamePrefix();
+            return schemaOption.constStringNamePrefix();
         }
         return null;
     }

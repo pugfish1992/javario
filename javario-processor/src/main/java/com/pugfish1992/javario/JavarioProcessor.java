@@ -3,7 +3,9 @@ package com.pugfish1992.javario;
 import com.pugfish1992.javario.annotation.ModelSchema;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +29,7 @@ import javax.tools.Diagnostic;
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class JavarioProcessor extends AbstractProcessor {
 
+    private static final String GENERATED_CLASS_PACKAGE = "com.pugfish1992.javario";
 
     private Filer mFiler;
     private Messager mMessager;
@@ -43,7 +46,7 @@ public class JavarioProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
 
-        Map<String, String> mModelNamesWithClassName = new HashMap<>();
+        List<String> writtenModelClassNames = new ArrayList<>();
         ModelClassWriter modelClassWriter = new ModelClassWriter(mMessager, mFiler);
 
         // 1- Generate model classes from schema classes
@@ -56,8 +59,13 @@ public class JavarioProcessor extends AbstractProcessor {
             }
 
             try {
-                Map.Entry<String, String> names = modelClassWriter.write((TypeElement) element);
-                mModelNamesWithClassName.put(names.getKey(), names.getValue());
+                String writtenClassName = modelClassWriter.write((TypeElement) element, GENERATED_CLASS_PACKAGE);
+                if (writtenClassName != null) {
+                    writtenModelClassNames.add(writtenClassName);
+                } else {
+                    return true;
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -66,7 +74,7 @@ public class JavarioProcessor extends AbstractProcessor {
         // 2- Generate a history class which contains a list of generated class names
 
         try {
-            GeneratingModelClassHistoryClassWriter.write(mFiler, mModelNamesWithClassName.values());
+            ModelGenerationHistoryClassWriter.write(mFiler, writtenModelClassNames);
         } catch (IOException e) {
             e.printStackTrace();
         }

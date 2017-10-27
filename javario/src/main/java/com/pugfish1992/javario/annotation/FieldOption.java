@@ -13,5 +13,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface FieldOption {
     String fieldName() default "";
-    String constVarName() default "";
+    String constStringName() default "";
 }

@@ -32,7 +32,7 @@ final class Repository {
      * ---------- */
 
     @SuppressWarnings("unchecked")
-    <T extends BaseModel> T findItemByIdFrom(long id, Class<? extends BaseModel> klass) {
+    <T extends BaseModel> T findItemFrom(long id, Class<? extends BaseModel> klass) {
         // Respond immediately with cache if available
         T model = mCache.getIfCached(id, klass);
         if (model != null) return model;
@@ -72,7 +72,7 @@ final class Repository {
     }
 
     boolean deleteItemFrom(BaseModel item) {
-        mCache.remove(item.getId(), item.getClass());
+        mCache.remove(item.getPrimaryKey(), item.getClass());
         if (hasLocalSource()) {
             return mLocalDataSource.deleteItemFrom(item);
         }

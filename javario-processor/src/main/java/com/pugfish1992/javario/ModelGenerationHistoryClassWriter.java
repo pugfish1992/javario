@@ -9,7 +9,6 @@ import com.squareup.javapoet.TypeSpec;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.processing.Filer;
@@ -19,7 +18,7 @@ import javax.lang.model.element.Modifier;
  *
  * This class generates a class like:
  *
- * final class GeneratingModelClassHistory {
+ * final class ModelGenerationHistory {
  *   List<\SchemaInfo> getListOfGeneratedModelSchemaInfo() {
  *     List<\SchemaInfo> list = new ArrayList<>();
  *     list.add(Luigi.getSchemaInfo());
@@ -30,7 +29,7 @@ import javax.lang.model.element.Modifier;
  *
  */
 
-class GeneratingModelClassHistoryClassWriter {
+class ModelGenerationHistoryClassWriter {
 
     private static final ClassName classList = ClassName.get(List.class);
     private static final ClassName classSchemaInfo = ClassName.get(SchemaInfo.class);
@@ -39,11 +38,11 @@ class GeneratingModelClassHistoryClassWriter {
     static void write(Filer filer, Collection<String> generatedClassNames) throws IOException {
 
         TypeSpec.Builder historyClass = TypeSpec
-                .classBuilder(GeneratingModelClassHistoryClassSpec.CLASS_NAME)
+                .classBuilder(ModelGenerationHistoryClassSpec.CLASS_NAME)
                 .addModifiers(Modifier.FINAL);
 
         MethodSpec.Builder method = MethodSpec
-                .methodBuilder(GeneratingModelClassHistoryClassSpec.METHOD_GET_LIST_OF_SCHEMA_INFO)
+                .methodBuilder(ModelGenerationHistoryClassSpec.METHOD_GET_LIST_OF_SCHEMA_INFO)
                 .addModifiers(Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(classList, classSchemaInfo));
 
@@ -55,7 +54,7 @@ class GeneratingModelClassHistoryClassWriter {
         method.addStatement("return list");
 
         historyClass.addMethod(method.build());
-        JavaFile.builder(GeneratingModelClassHistoryClassSpec.GENERATED_CLASS_PACKAGE, historyClass.build())
+        JavaFile.builder(ModelGenerationHistoryClassSpec.GENERATED_CLASS_PACKAGE, historyClass.build())
                 .build().writeTo(filer);
     }
 }

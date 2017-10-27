@@ -20,7 +20,7 @@ class MetaDataUtils {
         return TypeName.get(element.asType());
     }
 
-    static String getFieldName(VariableElement element) {
+    static String getVariableName(VariableElement element) {
         return element.getSimpleName().toString();
     }
 

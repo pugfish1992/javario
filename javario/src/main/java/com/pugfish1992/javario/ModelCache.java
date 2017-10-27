@@ -26,10 +26,10 @@ final class ModelCache {
         HashMap<Long, BaseModel> subCache = mCache.get(model.getClass());
         if (subCache == null) {
             subCache = new HashMap<>();
-            subCache.put(model.getId(), model);
+            subCache.put(model.getPrimaryKey(), model);
             mCache.put(model.getClass(), subCache);
         } else {
-            subCache.put(model.getId(), model);
+            subCache.put(model.getPrimaryKey(), model);
         }
     }
 
@@ -44,7 +44,7 @@ final class ModelCache {
         }
 
         for (BaseModel model : models) {
-            subCache.put(model.getId(), model);
+            subCache.put(model.getPrimaryKey(), model);
         }
     }
 
