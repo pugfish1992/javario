@@ -63,7 +63,7 @@ class JavarioClassWriter {
                 .addModifiers(Modifier.STATIC, Modifier.PUBLIC)
                 .addParameter(firstParam);
 
-        // --- Begin coding ------------------------------------------------------------
+        // --- Begin of coding ------------------------------------------------------------
 
         initializeMethod.addStatement("$T<$T> schemaInfoList = new $T<>()", classList, classSchemaInfo, classArrayList);
         for (String className : generatedModelClassNames) {
@@ -77,7 +77,7 @@ class JavarioClassWriter {
                 .endControlFlow()
                 .addStatement("$T.initialize($L)", classRepository, firstParamName);
 
-        // --- End coding --------------------------------------------------------------
+        // --- End of coding --------------------------------------------------------------
 
         javarioClass.addMethod(initializeMethod.build());
         JavaFile.builder(packageName, javarioClass.build())
