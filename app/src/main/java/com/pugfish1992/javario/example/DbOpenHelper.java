@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.pugfish1992.javario.SchemaInfo;
+import com.pugfish1992.sqliteutils.library.TableCreator;
 
 import java.util.List;
 
@@ -26,9 +27,9 @@ public class DbOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        if (mSchemaInfoList == null) return;
-
-
+        for (SchemaInfo info : mSchemaInfoList) {
+            
+        }
     }
 
     @Override

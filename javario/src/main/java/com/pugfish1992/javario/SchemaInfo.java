@@ -14,6 +14,7 @@ public final class SchemaInfo {
 
     private String mModelName;
     private String mClassName;
+    private String mNameOfPrimaryKeyField;
     private Map<String, FieldType> mFieldNamesWithType;
 
     SchemaInfo() {
@@ -26,6 +27,10 @@ public final class SchemaInfo {
 
     public String getClassName() {
         return mClassName;
+    }
+
+    public String getNameOfPrimaryKeyField() {
+        return mNameOfPrimaryKeyField;
     }
 
     public FieldType getFieldTypeOf(String fieldName) {
@@ -44,6 +49,11 @@ public final class SchemaInfo {
     /* Intentional package-private */
     void setClassName(String className) {
         mClassName = className;
+    }
+
+    /* Intentional package-private */
+    void setNameOfPrimaryKeyField(String nameOfPrimaryKeyField) {
+        mNameOfPrimaryKeyField = nameOfPrimaryKeyField;
     }
 
     /* Intentional package-private */

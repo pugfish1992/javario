@@ -1,5 +1,7 @@
 package com.pugfish1992.javario.example;
 
+import android.content.Context;
+
 import com.pugfish1992.javario.BaseModel;
 import com.pugfish1992.javario.SchemaInfo;
 import com.pugfish1992.javario.datasource.DataSource;
@@ -12,9 +14,16 @@ import java.util.List;
 
 public class SQLiteDataSource implements DataSource<BaseModel> {
 
+    private DbOpenHelper mDbOpenHelper;
+    private Context mAppContext;
+
+    public SQLiteDataSource(Context appContext) {
+        mAppContext = appContext;
+    }
+
     @Override
     public void onInitialize(List<SchemaInfo> schemaInfoList) {
-
+        mDbOpenHelper = new DbOpenHelper(mAppContext, schemaInfoList);
     }
 
     @Override
