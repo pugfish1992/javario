@@ -295,7 +295,7 @@ class ModelClassWriter {
         // [12]
         modelClass.addMethod(buildRestoringDataMethod(fieldNamesWithConstStringName, fieldNamesWithVarName, fieldNamesWithVarType));
 
-        JavaFile.builder(ModelClassSpec.GENERATED_CLASS_PACKAGE, modelClass.build()).build().writeTo(mFiler);
+        JavaFile.builder(packageName, modelClass.build()).build().writeTo(mFiler);
         return className;
     }
 

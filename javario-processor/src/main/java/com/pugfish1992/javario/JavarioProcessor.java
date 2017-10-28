@@ -4,9 +4,7 @@ import com.pugfish1992.javario.annotation.ModelSchema;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -25,7 +23,8 @@ import javax.tools.Diagnostic;
 @SupportedAnnotationTypes({
         "com.pugfish1992.javario.annotation.ModelSchema",
         "com.pugfish1992.javario.annotation.ModelSchemaOption",
-        "com.pugfish1992.javario.annotation.FieldOption"})
+        "com.pugfish1992.javario.annotation.FieldOption",
+        "com.pugfish1992.javario.annotation.PrimaryKey"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class JavarioProcessor extends AbstractProcessor {
 
@@ -71,10 +70,10 @@ public class JavarioProcessor extends AbstractProcessor {
             }
         }
 
-        // 2- Generate a history class which contains a list of generated class names
+        // 2- Generate a Javario class which initialize the javario
 
         try {
-            ModelGenerationHistoryClassWriter.write(mFiler, writtenModelClassNames);
+            JavarioClassWriter.write(mFiler, GENERATED_CLASS_PACKAGE, writtenModelClassNames);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -6,7 +6,6 @@
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/javario/javario.iml" filepath="$PROJECT_DIR$/javario/javario.iml" />
       <module fileurl="file://$PROJECT_DIR$/javario-processor/javario-processor.iml" filepath="$PROJECT_DIR$/javario-processor/javario-processor.iml" />
-      <module fileurl="file://$PROJECT_DIR$/javario-sqlite/javario-sqlite.iml" filepath="$PROJECT_DIR$/javario-sqlite/javario-sqlite.iml" />
     </modules>
   </component>
 </project>
