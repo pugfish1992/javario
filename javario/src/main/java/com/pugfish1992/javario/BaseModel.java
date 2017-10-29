@@ -59,6 +59,7 @@ abstract public class BaseModel {
      */
 
     abstract public long getPrimaryKey();
+    abstract public void setPrimaryKey(long primaryKey);
     abstract public ContentValues toValueMap();
     abstract public void initWithValueMap(ContentValues valueMap);
 }

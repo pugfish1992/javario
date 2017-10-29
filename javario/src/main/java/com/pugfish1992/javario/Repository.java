@@ -63,9 +63,11 @@ final class Repository {
     }
 
     boolean saveItemTo(BaseModel item) {
-        mCache.cache(item);
         if (hasLocalSource()) {
-            return mLocalDataSource.saveItemTo(item);
+            boolean wasSuccessful = mLocalDataSource.saveItemTo(item);
+            if (wasSuccessful) {
+                mCache.cache(item);
+            }
         }
 
         return false;

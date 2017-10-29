@@ -133,6 +133,12 @@ public class Mario extends BaseModel {
         this.life = valueMap.getAsInt(LIFE);
         this.isFireMario = valueMap.getAsBoolean(IS_FIRE_MARIO);
     }
+
+    // 13- [setting the primary key method]
+    @Override
+    public final void setPrimaryKey(long primaryKey) {
+        marioId = primaryKey;
+    }
 }
  */
 
@@ -299,6 +305,8 @@ class ModelClassWriter {
         modelClass.addMethod(buildStoringDataMethod(fieldNamesWithConstStringName, fieldNamesWithVarName));
         // [12]
         modelClass.addMethod(buildRestoringDataMethod(fieldNamesWithConstStringName, fieldNamesWithVarName, fieldNamesWithVarType));
+        // [13]
+        modelClass.addMethod(buildSettingPrimaryKeyMethod(fieldNamesWithVarName.get(nameOfPrimaryKeyField)));
 
         JavaFile.builder(packageName, modelClass.build()).build().writeTo(mFiler);
         return className;
@@ -489,5 +497,15 @@ class ModelClassWriter {
         }
 
         return builder.build();
+    }
+
+    private MethodSpec buildSettingPrimaryKeyMethod(String primaryKeyVarName) {
+        return MethodSpec
+                .methodBuilder("setPrimaryKey")
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addAnnotation(Override.class)
+                .addParameter(ParameterSpec.builder(TypeName.LONG, "primaryKey").build())
+                .addStatement("$L = primaryKey", primaryKeyVarName)
+                .build();
     }
 }

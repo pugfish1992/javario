@@ -25,7 +25,7 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
 
     private DbOpenHelper mDbOpenHelper;
     private final Context mAppContext;
-    private Map<String, SchemaInfo> mModelNamesWithSchemaInfo;
+    private Map<String, SchemaInfo> mClassNamesWithSchemaInfo;
 
     public SQLiteDataSource(Context appContext) {
         mAppContext = appContext;
@@ -35,15 +35,15 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
     public void onInitialize(List<SchemaInfo> schemaInfoList) {
         mDbOpenHelper = new DbOpenHelper(mAppContext, schemaInfoList);
 
-        mModelNamesWithSchemaInfo = new HashMap<>();
+        mClassNamesWithSchemaInfo = new HashMap<>();
         for (SchemaInfo info : schemaInfoList) {
-            mModelNamesWithSchemaInfo.put(info.getClassName(), info);
+            mClassNamesWithSchemaInfo.put(info.getClassName(), info);
         }
     }
 
     @Override
     public BaseModel findItemFrom(long id, final Class<? extends BaseModel> klass) {
-        SchemaInfo info = mModelNamesWithSchemaInfo.get(klass.getSimpleName());
+        SchemaInfo info = mClassNamesWithSchemaInfo.get(klass.getSimpleName());
 
         WhereClause where = new WhereClause()
                 .equalTo(info.getNameOfPrimaryKeyField(), id);
@@ -65,7 +65,9 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
 
             @Override
             public void onScanRow(ContentValues valueMap) {
-                models.add(createModelFromValueMap(valueMap, klass));
+                BaseModel model = ModelUtils.newInstanceOf(klass);
+                model.initWithValueMap(valueMap);
+                models.add(model);
             }
 
             @Override
@@ -81,7 +83,7 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
 
     @Override
     public List<BaseModel> listItemsFrom(final Class<? extends BaseModel> klass) {
-        SchemaInfo info = mModelNamesWithSchemaInfo.get(klass.getSimpleName());
+        SchemaInfo info = mClassNamesWithSchemaInfo.get(klass.getSimpleName());
 
         final List<BaseModel> models = new ArrayList<>();
         SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
@@ -93,7 +95,9 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
 
                     @Override
                     public void onScanRow(ContentValues valueMap) {
-                        models.add(createModelFromValueMap(valueMap, klass));
+                        BaseModel model = ModelUtils.newInstanceOf(klass);
+                        model.initWithValueMap(valueMap);
+                        models.add(model);
                     }
 
                     @Override
@@ -109,26 +113,74 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
 
     @Override
     public boolean saveItemTo(BaseModel item) {
-        SchemaInfo info = mModelNamesWithSchemaInfo.get(item.getClass().getSimpleName());
-        WhereClause where = new WhereClause()
-                .equalTo(info.getNameOfPrimaryKeyField(), item.getPrimaryKey());
-
+        SchemaInfo info = mClassNamesWithSchemaInfo.get(item.getClass().getSimpleName());
+        ContentValues values = item.toValueMap();
         SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+        String where = new WhereClause()
+                .equalTo(info.getNameOfPrimaryKeyField(), item.getPrimaryKey())
+                .toStatement();
 
+        // Update if the specified item exists in the database.
+        int affectedRows;
+        db.beginTransaction();
+        try {
+            affectedRows = db.update(info.getModelName(), values, where, null);
+            if (affectedRows == 1) {
+                db.setTransactionSuccessful();
+            }
+
+        } finally {
+            db.endTransaction();
+        }
+
+        if (affectedRows == 1) {
+            db.close();
+            return true;
+        } else if (1 < affectedRows) {
+            // Should not be reached
+            throw new IllegalStateException(
+                    "the id of the specified item is not unique");
+        }
+
+        // If not, insert it as a new item to the database.
+        values.remove(info.getNameOfPrimaryKeyField());
+        long newRowId = db.insert(info.getModelName(), null, values);
         db.close();
+
+        if (newRowId != -1) {
+            item.setPrimaryKey(newRowId);
+            return true;
+        }
         return false;
     }
 
     @Override
     public boolean deleteItemFrom(BaseModel item) {
-        return false;
-    }
+        SchemaInfo info = mClassNamesWithSchemaInfo.get(item.getClass().getSimpleName());
+        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+        String where = new WhereClause()
+                .equalTo(info.getNameOfPrimaryKeyField(), item.getPrimaryKey())
+                .toStatement();
 
-    private BaseModel createModelFromValueMap(
-            ContentValues valueMap, Class<? extends BaseModel> klass) {
+        int affectedRow;
+        db.beginTransaction();
+        try {
+            affectedRow = db.delete(info.getModelName(), where, null);
+            if (affectedRow == 1) {
+                db.setTransactionSuccessful();
+            }
+        } finally {
+            db.endTransaction();
+        }
 
-        BaseModel model = ModelUtils.newInstanceOf(klass);
-        model.initWithValueMap(valueMap);
-        return model;
+        if (affectedRow == 0) {
+            return false;
+        } else if (affectedRow == 1) {
+            return true;
+        } else {
+            // Should not be reached
+            throw new IllegalStateException(
+                    "the id of the specified item is not unique");
+        }
     }
 }
