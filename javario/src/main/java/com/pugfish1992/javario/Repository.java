@@ -39,7 +39,7 @@ final class Repository {
 
         // We need to fetch new data from the local storage
         if (hasLocalSource()) {
-            model = (T) mLocalDataSource.findItemByIdFrom(id, klass);
+            model = (T) mLocalDataSource.findItemFrom(id, klass);
             if (model != null) {
                 mCache.cache(model);
                 return model;

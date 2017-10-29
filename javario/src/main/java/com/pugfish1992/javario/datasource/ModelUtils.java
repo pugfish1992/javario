@@ -16,6 +16,7 @@ public class ModelUtils {
 
     private static final String NEW_INSTANCE_METHOD = "newInstance";
     private static final String GET_SCHEMA_INFO_METHOD = "getSchemaInfo";
+    private static final String GETTING_MODEL_NAME_METHOD = "modelName";
 
     public static <T extends BaseModel> T newInstanceOf(Class<T> klass) {
         try {
@@ -34,6 +35,16 @@ public class ModelUtils {
         } catch (Exception e) {
             throw new IllegalStateException(klass.getName()
                     + " class does not has " + GET_SCHEMA_INFO_METHOD + "() method");
+        }
+    }
+
+    public static String getModelNameOf(Class<? extends BaseModel> klass) {
+        try {
+            Method method = klass.getMethod(GETTING_MODEL_NAME_METHOD);
+            return (String) method.invoke(null);
+        } catch (Exception e) {
+            throw new IllegalStateException(klass.getName()
+                    + " class does not has " + GETTING_MODEL_NAME_METHOD + "() method");
         }
     }
 }

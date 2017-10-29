@@ -1,6 +1,6 @@
 package com.pugfish1992.javario;
 
-import com.pugfish1992.javario.datasource.ValueMap;
+import android.content.ContentValues;
 
 import java.util.List;
 
@@ -59,6 +59,6 @@ abstract public class BaseModel {
      */
 
     abstract public long getPrimaryKey();
-    abstract public ValueMap toValueMap();
-    abstract public void initWithValueMap(ValueMap valueMap);
+    abstract public ContentValues toValueMap();
+    abstract public void initWithValueMap(ContentValues valueMap);
 }

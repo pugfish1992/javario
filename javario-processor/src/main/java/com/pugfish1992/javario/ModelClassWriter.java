@@ -1,11 +1,12 @@
 package com.pugfish1992.javario;
 
+import android.content.ContentValues;
+
 import com.pugfish1992.javario.annotation.FieldOption;
 import com.pugfish1992.javario.annotation.ModelSchema;
 import com.pugfish1992.javario.annotation.ModelSchemaOption;
 import com.pugfish1992.javario.annotation.PrimaryKey;
 import com.pugfish1992.javario.datasource.FieldType;
-import com.pugfish1992.javario.datasource.ValueMap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -16,7 +17,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,8 +118,8 @@ public class Mario extends BaseModel {
     // 11- [storing data method]
     // This method will be used for storing data of a model into the database.
     @Override
-    public final ValueMap toValueMap() {
-        return new ValueMap()
+    public final ContentValues toValueMap() {
+        return new ContentValues()
                 .put(MARIO_ID, marioId)
                 .put(LIFE, life)
                 .put(IS_FIRE_MARIO, isFireMario);
@@ -128,7 +128,7 @@ public class Mario extends BaseModel {
     // 12- [restoring data method]
     // This method will be used for restoring data of a model from the database.
     @Override
-    public final void initWithValueMap(ValueMap valueMap) {
+    public final void initWithValueMap(ContentValues valueMap) {
         this.marioId = valueMap.getAsLong(MARIO_ID);
         this.life = valueMap.getAsInt(LIFE);
         this.isFireMario = valueMap.getAsBoolean(IS_FIRE_MARIO);
@@ -141,7 +141,9 @@ class ModelClassWriter {
     private static final ClassName classString = ClassName.get(String.class);
     private static final ClassName classList = ClassName.get(List.class);
     private static final ClassName classSchemaInfo = ClassName.get(SchemaInfo.class);
-    private static final ClassName classValueMap = ClassName.get(ValueMap.class);
+    private static final ClassName classContentValues = ClassName.get(ContentValues.class);
+    private static final ClassName classBaseModel = ClassName.get(BaseModel.class);
+    private static final ClassName classFieldType = ClassName.get(FieldType.class);
 
     private static final String CONST_STRING_EMPTY_PREFIX = "";
 
@@ -183,7 +185,7 @@ class ModelClassWriter {
 
         TypeSpec.Builder modelClass = TypeSpec
                 .classBuilder(className)
-                .superclass(BaseModel.class)
+                .superclass(classBaseModel)
                 .addModifiers(Modifier.PUBLIC);
 
         // Key is fieldNames
@@ -303,7 +305,7 @@ class ModelClassWriter {
     }
 
     private FieldSpec buildConstString(String fieldName, String constStringName) {
-        return FieldSpec.builder(String.class,
+        return FieldSpec.builder(classString,
                 constStringName,
                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                 .initializer("$S", fieldName)
@@ -358,19 +360,19 @@ class ModelClassWriter {
 
             if (MetaDataUtils.isIntType(fieldType)) {
                 builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
-                        fieldConstName, FieldType.class, FieldType.INT.name());
+                        fieldConstName, classFieldType, FieldType.INT.name());
             } else
             if (MetaDataUtils.isLongType(fieldType)) {
                 builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
-                        fieldConstName, FieldType.class, FieldType.LONG.name());
+                        fieldConstName, classFieldType, FieldType.LONG.name());
             } else
             if (MetaDataUtils.isBooleanType(fieldType)) {
                 builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
-                        fieldConstName, FieldType.class, FieldType.BOOLEAN.name());
+                        fieldConstName, classFieldType, FieldType.BOOLEAN.name());
             } else
             if (MetaDataUtils.isStringType(fieldType)) {
                 builder.addStatement("info.addFieldNameAndType($L, $T.$L)",
-                        fieldConstName, FieldType.class, FieldType.STRING.name());
+                        fieldConstName, classFieldType, FieldType.STRING.name());
             }
         }
         builder.addStatement("return info");
@@ -385,7 +387,7 @@ class ModelClassWriter {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(modelClass)
-                .addStatement("return $T.findItemFrom(primaryKey, $L.class)", BaseModel.class, modelClass.simpleName())
+                .addStatement("return $T.findItemFrom(primaryKey, $L.class)", classBaseModel, modelClass.simpleName())
                 .build();
     }
 
@@ -394,7 +396,7 @@ class ModelClassWriter {
                 .methodBuilder("listItems")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(classList, modelClass))
-                .addStatement("return $T.listItemsFrom($L.class)", BaseModel.class, modelClass.simpleName())
+                .addStatement("return $T.listItemsFrom($L.class)", classBaseModel, modelClass.simpleName())
                 .build();
     }
 
@@ -405,7 +407,7 @@ class ModelClassWriter {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
-                .addStatement("return $T.saveItemTo(item)", BaseModel.class)
+                .addStatement("return $T.saveItemTo(item)", classBaseModel)
                 .build();
     }
 
@@ -416,7 +418,7 @@ class ModelClassWriter {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
-                .addStatement("return $T.deleteItemFrom(item)", BaseModel.class)
+                .addStatement("return $T.deleteItemFrom(item)", classBaseModel)
                 .build();
     }
 
@@ -438,15 +440,15 @@ class ModelClassWriter {
                 .methodBuilder("toValueMap")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addAnnotation(Override.class)
-                .returns(ValueMap.class);
+                .returns(classContentValues);
 
-        builder.addCode("return new $T()\n", classValueMap);
+        builder.addStatement("$T map = new $T()", classContentValues, classContentValues);
         for (String fieldName : fieldNamesWithConstStringName.keySet()) {
-            builder.addCode(".put($L, $L)\n",
+            builder.addStatement("map.put($L, $L)",
                     fieldNamesWithConstStringName.get(fieldName),
                     fieldNamesWithVarName.get(fieldName));
         }
-        builder.addCode(";\n");
+        builder.addStatement("return map");
 
         return builder.build();
     }
@@ -456,7 +458,7 @@ class ModelClassWriter {
             Map<String, String> fieldNamesWithVarName,
             Map<String, TypeName> fieldNamesWithType) {
 
-        ParameterSpec param = ParameterSpec.builder(ValueMap.class, "valueMap").build();
+        ParameterSpec param = ParameterSpec.builder(classContentValues, "valueMap").build();
 
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("initWithValueMap")
@@ -470,16 +472,16 @@ class ModelClassWriter {
             TypeName varType = fieldNamesWithType.get(fieldName);
 
             if (MetaDataUtils.isIntType(varType)) {
-                builder.addCode("this.$L = valueMap.getAsInt($L);\n", varName, constStringName);
+                builder.addStatement("this.$L = valueMap.getAsInteger($L)", varName, constStringName);
             } else
             if (MetaDataUtils.isLongType(varType)) {
-                builder.addCode("this.$L = valueMap.getAsLong($L);\n", varName, constStringName);
+                builder.addStatement("this.$L = valueMap.getAsLong($L)", varName, constStringName);
             } else
             if (MetaDataUtils.isBooleanType(varType)) {
-                builder.addCode("this.$L = valueMap.getAsBoolean($L);\n", varName, constStringName);
+                builder.addStatement("this.$L = valueMap.getAsBoolean($L)", varName, constStringName);
             } else
             if (MetaDataUtils.isStringType(varType)) {
-                builder.addCode("this.$L = valueMap.getAsString($L);\n", varName, constStringName);
+                builder.addStatement("this.$L = valueMap.getAsString($L)", varName, constStringName);
             } else {
                 mMessager.printMessage(Diagnostic.Kind.ERROR,
                         varType.toString() + " type does not supported.");

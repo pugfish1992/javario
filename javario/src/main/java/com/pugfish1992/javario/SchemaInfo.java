@@ -41,6 +41,12 @@ public final class SchemaInfo {
         return mFieldNamesWithType.keySet();
     }
 
+    public Set<String> fieldNameSetWithoutPrimaryKey() {
+        Set<String> set = mFieldNamesWithType.keySet();
+        set.remove(mNameOfPrimaryKeyField);
+        return set;
+    }
+
     /* Intentional package-private */
     void setModelName(String modelName) {
         mModelName = modelName;
