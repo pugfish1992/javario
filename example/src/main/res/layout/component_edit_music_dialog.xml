@@ -25,4 +25,14 @@
             android:layout_height="wrap_content"/>
     </android.support.design.widget.TextInputLayout>
 
+    <RatingBar
+        android:id="@+id/rating_stars"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="4"
+        android:rating="0"
+        android:stepSize="1.0"/>
+
 </LinearLayout>

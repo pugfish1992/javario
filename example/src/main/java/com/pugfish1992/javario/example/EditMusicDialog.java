@@ -9,7 +9,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
+import android.widget.RatingBar;
 
 import com.pugfish1992.javario.Music;
 
@@ -26,6 +28,7 @@ public class EditMusicDialog extends DialogFragment {
     private static final String ARG_MUSIC_ID = "EditMusicDialog:musicId";
     private static final String ARG_MUSIC_TITLE = "EditMusicDialog:musicName";
     private static final String ARG_MUSIC_NOTE = "EditMusicDialog:musicNote";
+    private static final String ARG_MUSIC_RATING = "EditMusicDialog:musicRating";
 
     private OnFinishEditingListener mListener;
     @Nullable private Music mOldMusic;
@@ -37,6 +40,7 @@ public class EditMusicDialog extends DialogFragment {
             args.putLong(ARG_MUSIC_ID, music.id);
             args.putString(ARG_MUSIC_TITLE, music.name);
             args.putString(ARG_MUSIC_NOTE, music.note);
+            args.putInt(ARG_MUSIC_RATING, music.rating);
             fragment.setArguments(args);
         }
         return fragment;
@@ -50,6 +54,7 @@ public class EditMusicDialog extends DialogFragment {
             mOldMusic.id = getArguments().getLong(ARG_MUSIC_ID);
             mOldMusic.name = getArguments().getString(ARG_MUSIC_TITLE);
             mOldMusic.note = getArguments().getString(ARG_MUSIC_NOTE);
+            mOldMusic.rating = getArguments().getInt(ARG_MUSIC_RATING);
         }
     }
 
@@ -61,9 +66,11 @@ public class EditMusicDialog extends DialogFragment {
 
         final TextInputEditText nameEditor = view.findViewById(R.id.edit_title);
         final TextInputEditText noteEditor = view.findViewById(R.id.edit_note);
+        final RatingBar ratingBar = view.findViewById(R.id.rating_stars);
         if (mOldMusic != null) {
             nameEditor.setText(mOldMusic.name);
             noteEditor.setText(mOldMusic.note);
+            ratingBar.setRating(mOldMusic.rating);
         }
 
         return new AlertDialog.Builder(getActivity())
@@ -77,12 +84,14 @@ public class EditMusicDialog extends DialogFragment {
                             music.id = mOldMusic.id;
                             music.name = mOldMusic.name;
                             music.note = mOldMusic.note;
+                            music.rating = mOldMusic.rating;
                         }
 
                         String text = music.name = nameEditor.getText().toString();
                         music.name = (text.length() != 0) ? text : music.name;
                         text = noteEditor.getText().toString();
                         music.note = (text.length() != 0) ? text : music.note;
+                        music.rating = (int) ratingBar.getRating();
 
                         mListener.onFinishEditing(mOldMusic, music);
                     }
