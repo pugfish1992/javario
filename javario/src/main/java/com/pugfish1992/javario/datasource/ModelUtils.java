@@ -14,17 +14,15 @@ public class ModelUtils {
 
     private ModelUtils() {}
 
-    private static final String NEW_INSTANCE_METHOD = "newInstance";
     private static final String GET_SCHEMA_INFO_METHOD = "getSchemaInfo";
     private static final String GETTING_MODEL_NAME_METHOD = "modelName";
 
     public static <T extends BaseModel> T newInstanceOf(Class<T> klass) {
         try {
-            Method method = klass.getMethod(NEW_INSTANCE_METHOD);
-            return klass.cast(method.invoke(null));
+            return klass.newInstance();
         } catch (Exception e) {
             throw new IllegalStateException(klass.getName()
-                    + " class does not has " + NEW_INSTANCE_METHOD + "() method");
+                    + " class does not has public & emply default constructor method");
         }
     }
 

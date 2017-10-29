@@ -16,6 +16,6 @@ public interface DataSource<T extends BaseModel> {
     void onInitialize(List<SchemaInfo> schemaInfoList);
     T findItemFrom(long id, Class<? extends BaseModel> klass);
     List<T> listItemsFrom(Class<? extends BaseModel> klass);
-    boolean saveItemTo(T item);
-    boolean deleteItemFrom(T item);
+    boolean saveItem(T item);
+    boolean deleteItem(T item);
 }

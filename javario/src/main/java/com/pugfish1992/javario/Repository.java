@@ -4,22 +4,18 @@ import com.pugfish1992.javario.datasource.DataSource;
 
 import java.util.List;
 
-/**
- * TODO; SUPPORT REMOTE DATA SOURCE.
- */
-
 final class Repository {
     
     private static Repository INSTANCE = null;
-    private final DataSource<BaseModel> mLocalDataSource;
+    private final DataSource<BaseModel> mRootDataSource;
     private final ModelCache mCache;
 
-    static void initialize(DataSource<BaseModel> local) {
-        INSTANCE = new Repository(local);
+    static void initialize(DataSource<BaseModel> rootDataSource) {
+        INSTANCE = new Repository(rootDataSource);
     }
 
-    private Repository(DataSource<BaseModel> local) {
-        mLocalDataSource = local;
+    private Repository(DataSource<BaseModel> rootDataSource) {
+        mRootDataSource = rootDataSource;
         mCache = new ModelCache();
     }
 
@@ -37,9 +33,8 @@ final class Repository {
         T model = mCache.getIfCached(id, klass);
         if (model != null) return model;
 
-        // We need to fetch new data from the local storage
         if (hasLocalSource()) {
-            model = (T) mLocalDataSource.findItemFrom(id, klass);
+            model = (T) mRootDataSource.findItemFrom(id, klass);
             if (model != null) {
                 mCache.cache(model);
                 return model;
@@ -52,31 +47,33 @@ final class Repository {
     @SuppressWarnings("unchecked")
     <T extends BaseModel> List<T> listItemsFrom(Class<? extends BaseModel> klass) {
         if (hasLocalSource()) {
-            List<T> modelList = (List<T>) mLocalDataSource.listItemsFrom(klass);
+            List<T> modelList = (List<T>) mRootDataSource.listItemsFrom(klass);
             if (modelList != null) {
                 mCache.clearOf(klass);
                 mCache.cacheAll(modelList);
+                return modelList;
             }
         }
 
         return null;
     }
 
-    boolean saveItemTo(BaseModel item) {
+    boolean saveItem(BaseModel item) {
         if (hasLocalSource()) {
-            boolean wasSuccessful = mLocalDataSource.saveItemTo(item);
+            boolean wasSuccessful = mRootDataSource.saveItem(item);
             if (wasSuccessful) {
                 mCache.cache(item);
+                return true;
             }
         }
 
         return false;
     }
 
-    boolean deleteItemFrom(BaseModel item) {
+    boolean deleteItem(BaseModel item) {
         mCache.remove(item.getPrimaryKey(), item.getClass());
         if (hasLocalSource()) {
-            return mLocalDataSource.deleteItemFrom(item);
+            return mRootDataSource.deleteItem(item);
         }
 
         return false;
@@ -87,6 +84,6 @@ final class Repository {
      * ---------- */
 
     private boolean hasLocalSource() {
-        return mLocalDataSource != null;
+        return mRootDataSource != null;
     }
 }

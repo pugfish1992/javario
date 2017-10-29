@@ -1,4 +1,4 @@
-package com.pugfish1992.javario.example;
+package com.pugfish1992.javario.example.schema;
 
 import android.view.View;
 
@@ -11,13 +11,10 @@ import com.pugfish1992.javario.annotation.PrimaryKey;
  * Created by daichi on 10/25/17.
  */
 
-@ModelSchema(value = "Mario")
-public class MarioSchema {
-
+@ModelSchema("music")
+public class MusicSchema {
     @PrimaryKey
-    long marioId;
-    String shout;
-    boolean withLuigi;
-    long killCount;
-    int lifeCount;
+    long id;
+    String name;
+    String note;
 }

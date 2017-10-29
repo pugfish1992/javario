@@ -22,14 +22,14 @@ import javax.lang.model.element.Modifier;
 // This class will generates a Javario class such as below:
 
 public final class Javario {
-  public static void initialize(DataSource<BaseModel> localStorage) {
+  public static void initialize(DataSource<BaseModel> rootStorage) {
     List<SchemaInfo> schemaInfoList = new ArrayList<>();
     schemaInfoList.add(Luigi.getSchemaInfo());
     schemaInfoList.add(Mario.getSchemaInfo());
-    if (localStorage != null) {
-      localStorage.onInitialize(Collections.unmodifiableList(schemaInfoList));
+    if (rootStorage != null) {
+      rootStorage.onInitialize(Collections.unmodifiableList(schemaInfoList));
     }
-    Repository.initialize(localStorage);
+    Repository.initialize(rootStorage);
   }
 }
 
@@ -52,7 +52,7 @@ class JavarioClassWriter {
                 .classBuilder("Javario")
                 .addModifiers(Modifier.FINAL, Modifier.PUBLIC);
 
-        final String firstParamName = "localStorage";
+        final String firstParamName = "rootStorage";
         ParameterSpec firstParam = ParameterSpec.builder(
                 ParameterizedTypeName.get(classDataSource, classBaseModel),
                 firstParamName)

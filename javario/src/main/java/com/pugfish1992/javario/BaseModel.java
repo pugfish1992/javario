@@ -23,11 +23,11 @@ abstract public class BaseModel {
     }
 
     public boolean save() {
-        return saveItemTo(this);
+        return saveItem(this);
     }
 
     public boolean delete() {
-        return deleteItemFrom(this);
+        return deleteItem(this);
     }
 
     /**
@@ -45,13 +45,13 @@ abstract public class BaseModel {
     }
 
     /* Intentional package-private */
-    static <T extends BaseModel> boolean saveItemTo(T item) {
-        return Repository.api().saveItemTo(item);
+    static <T extends BaseModel> boolean saveItem(T item) {
+        return Repository.api().saveItem(item);
     }
 
     /* Intentional package-private */
-    static <T extends BaseModel> boolean deleteItemFrom(T item) {
-        return Repository.api().deleteItemFrom(item);
+    static <T extends BaseModel> boolean deleteItem(T item) {
+        return Repository.api().deleteItem(item);
     }
 
     /**

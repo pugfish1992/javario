@@ -1,9 +1,10 @@
-package com.pugfish1992.javario.example;
+package com.pugfish1992.javario.example.datasource;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.pugfish1992.javario.BaseModel;
 import com.pugfish1992.javario.SchemaInfo;
@@ -112,7 +113,7 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
     }
 
     @Override
-    public boolean saveItemTo(BaseModel item) {
+    public boolean saveItem(BaseModel item) {
         SchemaInfo info = mClassNamesWithSchemaInfo.get(item.getClass().getSimpleName());
         ContentValues values = item.toValueMap();
         SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
@@ -155,7 +156,7 @@ public class SQLiteDataSource implements DataSource<BaseModel> {
     }
 
     @Override
-    public boolean deleteItemFrom(BaseModel item) {
+    public boolean deleteItem(BaseModel item) {
         SchemaInfo info = mClassNamesWithSchemaInfo.get(item.getClass().getSimpleName());
         SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
         String where = new WhereClause()

@@ -3,6 +3,7 @@ package com.pugfish1992.javario.example;
 import android.app.Application;
 
 import com.pugfish1992.javario.Javario;
+import com.pugfish1992.javario.example.datasource.SQLiteDataSource;
 
 /**
  * Created by daichi on 10/29/17.

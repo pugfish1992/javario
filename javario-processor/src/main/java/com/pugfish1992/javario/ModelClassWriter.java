@@ -59,7 +59,7 @@ public class Mario extends BaseModel {
     public int life;
     public boolean isFireMario;
 
-    // 3- [default constructor]
+    // 3- [default empty constructor]
     // This empty public constructor is needed when
     // create a new instance of a model class using reflection.
     public Mario() {}
@@ -98,13 +98,13 @@ public class Mario extends BaseModel {
     // 8- [saving an item method]
     // Static delegate method.
     public static boolean saveItem(Mario item) {
-        return BaseModel.saveItemTo(item);
+        return BaseModel.saveItem(item);
     }
 
     // 9- [deleting an item method]
     // Static delegate method.
     public static boolean deleteItem(Mario item) {
-        return BaseModel.deleteItemFrom(item);
+        return BaseModel.deleteItem(item);
     }
 
     // 10- [getting the primary key method]
@@ -184,7 +184,8 @@ class ModelClassWriter {
         // The name of a model class is the same as the model name if it is not specified
         String className = modelSchemaAnno.className();
         if (className.length() == 0) {
-            className = modelName;
+            // Make the first letter of a class name uppercase
+            className = modelName.substring(0, 1).toUpperCase() + modelName.substring(1);
         }
 
         ClassName classNameObj = ClassName.get(packageName, className);
@@ -285,6 +286,8 @@ class ModelClassWriter {
             modelClass.addField(buildVariable(fieldVarName, varType, defValue));
         }
 
+        // [3]
+        modelClass.addMethod(buildDefaultEmptyConstructor());
         // [4]
         modelClass.addMethod(buildGettingModelNameMethod(modelName));
         // [5]
@@ -335,6 +338,13 @@ class ModelClassWriter {
                     .initializer("$L", defValue)
                     .build();
         }
+    }
+
+    private MethodSpec buildDefaultEmptyConstructor() {
+        return MethodSpec
+                .constructorBuilder()
+                .addModifiers(Modifier.PUBLIC)
+                .build();
     }
 
     private MethodSpec buildGettingModelNameMethod(String modelName) {
@@ -415,7 +425,7 @@ class ModelClassWriter {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
-                .addStatement("return $T.saveItemTo(item)", classBaseModel)
+                .addStatement("return $T.saveItem(item)", classBaseModel)
                 .build();
     }
 
@@ -426,7 +436,7 @@ class ModelClassWriter {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(param)
                 .returns(TypeName.BOOLEAN)
-                .addStatement("return $T.deleteItemFrom(item)", classBaseModel)
+                .addStatement("return $T.deleteItem(item)", classBaseModel)
                 .build();
     }
 

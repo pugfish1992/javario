@@ -1,4 +1,4 @@
-package com.pugfish1992.javario.example;
+package com.pugfish1992.javario.example.datasource;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -19,7 +19,7 @@ import java.util.List;
 
 public class DbOpenHelper extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "foo.db";
+    private static final String DATABASE_NAME = "music.db";
     private static final int DATABASE_VERSION = 1;
 
     private List<SchemaInfo> mSchemaInfoList;
